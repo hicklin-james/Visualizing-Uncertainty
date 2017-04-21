@@ -15,7 +15,8 @@ angular
     'ngRoute',
     'ngSanitize',
     'ngTouch',
-    'underscore'
+    'underscore',
+    'ui.select'
   ]
   .config ($routeProvider) ->
     $routeProvider

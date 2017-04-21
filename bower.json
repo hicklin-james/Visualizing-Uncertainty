@@ -11,7 +11,9 @@
     "angular-sanitize": "^1.4.0",
     "angular-touch": "^1.4.0",
     "underscore": "~1.8.3",
-    "d3": "./includes/d3/"
+    "d3": "./includes/d3/",
+    "angular-ui-select": "^0.19.0",
+    "components-font-awesome": "^4.7.0"
   },
   "devDependencies": {
     "angular-mocks": "^1.4.0"

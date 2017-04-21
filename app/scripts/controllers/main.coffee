@@ -10,127 +10,92 @@ module = angular.module('547ProjectApp')
  # Controller of the 547ProjectApp
 ###
 class MainCtrl
-  @$inject: ['$scope', '$interval']
-  constructor: (@$scope, @$interval) ->
+  @$inject: ['$scope', 'filterFilter', '$interval', 'DiseaseAttribute', '$timeout', 'Util']
+  constructor: (@$scope, @filterFilter, @$interval, @DiseaseAttribute, @$timeout, @Util) ->
 
     @$scope.ctrl = @
 
-    randNum = Math.floor(Math.random() * 100) + 1
-    diff = 100 - randNum
-      
-    @data1 = [
-      {
-        "value":"#{randNum}",
-        "label":"#{randNum} out of 100 (#{randNum}%) will have a stroke.",
-        "color":"darkred",
-        "sub_value":null
-      },
-      {
-        "value":"#{diff}",
-        "label":"#{diff} out of 100 (#{diff}%) will not have a stroke.",
-        "color":"#82D78C",
-        "sub_value":null
-      }
-    ]
+    @$scope.$watch 'ctrl.uncertaintyDegree', (nv, ov) =>
+      @$scope.$broadcast 'chartUncertaintyChanged', nv
 
-    randNum2 = Math.floor(Math.random() * 100) + 1
-    diff2 = 100 - randNum2
+    @$scope.$watch 'ctrl.pointEstimate', (nv, ov) =>
+      @$scope.$broadcast 'chartPointEstimateChanged', nv
 
-    @data2 = [
-      {
-        "value":"#{randNum2}",
-        "label":"#{randNum2} out of 100 (#{randNum2}%) will have a stroke.",
-        "color":"darkred",
-        "sub_value":null
-      },
-      {
-        "value":"#{diff2}",
-        "label":"#{diff2} out of 100 (#{diff2}%) will not have a stroke.",
-        "color":"#82D78C",
-        "sub_value":null
-      }
-    ]
+    @$scope.$watch 'ctrl.attributes | filter:{selected:true}', (nv) =>
+      @selectedAttributes = nv
+      @$scope.$broadcast 'chartDataChanged', @selectedAttributes
+    , true
 
-    randNum3 = Math.floor(Math.random() * 100) + 1
-    diff3 = 100 - randNum3
-      
-    @data3 = [
-      {
-        "value":"#{randNum3}",
-        "label":"#{randNum3} out of 100 (#{randNum3}%) will have a major bleed.",
-        "color":"darkred",
-        "sub_value":null
-      },
-      {
-        "value":"#{diff3}",
-        "label":"#{diff3} out of 100 (#{diff3}%) will not have a major bleed.",
-        "color":"#82D78C",
-        "sub_value":null
-      }
-    ]
+    strokeRiskAttrs = 
+      key: "strokeRisk"
+      name: "Stroke Risk"
+      label: "Risk of stroke"
+      shortLabel: "Decrease risk of stroke"
+      iconArrayLabels: ["don't have a stroke", "saved from having a stroke", "have a stroke anyways"]
+      description: "Your risk of stroke will decrease if you choose to take warfarin"
+      deltaDirection: true
 
-    randNum4 = Math.floor(Math.random() * 100) + 1
-    diff4 = 100 - randNum4
+    bleedRiskAttrs = 
+      key: "bleedRisk"
+      name: "Bleed Risk"
+      label: "Risk of major bleed"
+      iconArrayLabels: ["don't have a major bleed", "have a major bleed anyways", "have a major bleed caused by warfarin"]
+      shortLabel: "Increase risk of bleed"
+      description: "Taking warfarin can increase your risk of major internal bleed"
+      deltaDirection: false
 
-    @data4 = [
-      {
-        "value":"#{randNum4}",
-        "label":"#{randNum4} out of 100 (#{randNum4}%) will have a major bleed.",
-        "color":"darkred",
-        "sub_value":null
-      },
-      {
-        "value":"#{diff4}",
-        "label":"#{diff4} out of 100 (#{diff4}%) will not have a major bleed.",
-        "color":"#82D78C",
-        "sub_value":null
-      }
-    ]
+    ichRiskAttrs = 
+      key: "ichRisk"
+      name: "Intercranial Hemorrhage Risk"
+      label: "Risk of intercranial hemorrhage"
+      iconArrayLabels: ["don't have an intercranial hemmorhage", "have an intercranial hemmorhage anyways", "have an intercranial hemmorhage caused by warfarin"]
+      shortLabel: "Increase risk of hemorrhage"
+      description: "Taking warfarin can increase your risk of an intercranial hemorrhage"
+      deltaDirection: false
 
-  resampleStrokeRiskData: () ->
-    randNum = Math.floor(Math.random() * 100) + 1
-    diff = 100 - randNum
-    @data1[0]["value"] = randNum
-    @data1[0]["label"] = "#{randNum} out of 100 (#{randNum}%) will have a stroke."
-    @data1[1]["value"] = diff
-    @data1[1]["label"] = "#{diff} out of 100 (#{diff}%) patients will not have a stroke."
+    abdoPainRiskAttrs = 
+      key: "abdoPain"
+      name: "Abdominal Pain Risk"
+      label: "Risk of abdominal pain"
+      iconArrayLabels: ["don't have any abdominal pain", "already have abdominal pain", "develop abdominal pain from taking warfarin"]
+      shortLabel: "Increase risk of abdominal pain"
+      description: "Taking warfarin can increase your risk of abdominal pain."
+      deltaDirection: false
 
-    randNum2 = Math.floor(Math.random() * 100) + 1
-    diff2 = 100 - randNum2
-    @data2[0]["value"] = randNum2
-    @data2[0]["label"] = "#{randNum2} out of 100 (#{randNum2}%) will have a stroke."
-    @data2[1]["value"] = diff2
-    @data2[1]["label"] = "#{diff2} out of 100 (#{diff2}%) patients will not have a stroke."
+    @strokeRisk = new @DiseaseAttribute(strokeRiskAttrs)
+    @bleedRisk = new @DiseaseAttribute(bleedRiskAttrs)
+    @ichRisk = new @DiseaseAttribute(ichRiskAttrs)
+    @abdoRisk = new @DiseaseAttribute(abdoPainRiskAttrs)
 
-  resampleMajorBleedData: () ->
-    randNum3 = Math.floor(Math.random() * 100) + 1
-    diff3 = 100 - randNum3
-    @data3[0]["value"] = randNum3
-    @data3[0]["label"] = "#{randNum3} out of 100 (#{randNum3}%) will have a stroke."
-    @data3[1]["value"] = diff3
-    @data3[1]["label"] = "#{diff3} out of 100 (#{diff3}%) patients will not have a stroke."
+    @strokeRisk.selected = true
+    @bleedRisk.selected = true
+    @ichRisk.selected = true
+    @abdoRisk.selected = true
 
-    randNum4 = Math.floor(Math.random() * 100) + 1
-    diff4 = 100 - randNum4
-    @data4[0]["value"] = randNum4
-    @data4[0]["label"] = "#{randNum4} out of 100 (#{randNum4}%) will have a stroke."
-    @data4[1]["value"] = diff4
-    @data4[1]["label"] = "#{diff4} out of 100 (#{diff4}%) patients will not have a stroke."
+    @attributes = [@strokeRisk, @bleedRisk, @ichRisk, @abdoRisk]
+    # start as empty
+    @selectedAttributes = [@strokeRisk, @bleedRisk, @ichRisk, @abdoRisk]
+    @selectedDefaults = true
 
-    # @$interval () =>
-    #   randNum = Math.floor(Math.random() * 100) + 1
-    #   diff = 100 - randNum
-    #   @data1[0]["value"] = randNum
-    #   @data1[0]["label"] = "#{randNum} out of 100 (#{randNum}%) will have a stroke."
-    #   @data1[1]["value"] = diff
-    #   @data1[1]["label"] = "#{diff} out of 100 (#{diff}%) patients will not have a stroke."
+    @currentView = "Isotype"
+    @comparisonViewItems = ["Isotype", "Violin", "Gradient"]
+    @uncertaintyDegree = "1"
+    @pointEstimate = "mean"
 
-    #   randNum2 = Math.floor(Math.random() * 100) + 1
-    #   diff2 = 100 - randNum2
-    #   @data2[0]["value"] = randNum2
-    #   @data2[0]["label"] = "#{randNum2} out of 100 (#{randNum2}%) will have a stroke."
-    #   @data2[1]["value"] = diff2
-    #   @data2[1]["label"] = "#{diff2} out of 100 (#{diff2}%) patients will not have a stroke."
+  selectedAttrs: () ->
+    @filterFilter(@attributes, {selected: true})
 
-    # , 5000
+  continueToVis: () ->
+    @selectedDefaults = true
+
+  selectAttribute: (attr) ->
+    i = @selectedAttributes.indexOf(attr)
+    if i is -1
+      attr.selected = true
+      @selectedAttributes.push attr
+    else
+      attr.selected = false
+      @selectedAttributes.splice(i, 1)
+
+    
 module.controller 'MainCtrl', MainCtrl

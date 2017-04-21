@@ -3,6 +3,9 @@ $icon-font-path: "../bower_components/bootstrap-sass-official/assets/fonts/boots
 @import "bootstrap-sass-official/assets/stylesheets/_bootstrap.scss";
 // endbower
 
+@import 'violin';
+@import 'gradient';
+
 .browsehappy {
   margin: 0.2em 0;
   background: #ccc;
@@ -96,4 +99,23 @@ body {
 
 .space-bottom {
   margin-bottom: 20px;
+}
+
+.inline-block {
+  display: inline-block;
+}
+
+.attribute-selection-box {
+  margin: 10px;
+  padding: 10px;
+  border: 1px solid lightgrey;
+  border-radius: 5px;
+}
+
+.align-middle {
+  vertical-align: middle;
+}
+
+.clickable {
+  cursor: pointer;
 }

@@ -1,0 +1,44 @@
+<div id="toolbox">
+  <div class="well">
+    <div class="space-all">
+      <div class="space-bottom">
+        <h4>Tool Box</h4>
+      </div>
+      <div class="form-group">
+        <label>Degree of Uncertainty</label>
+        <div class="radio" style="margin-top: 0;">
+          <label><input type="radio" ng-model="ctrl.uncertaintyDegree" name="uncertaintyradio" value="1" />95%</label>
+        </div>
+        <div class="radio">
+          <label><input type="radio" ng-model="ctrl.uncertaintyDegree" name="uncertaintyradio" value="2"/>99%</label>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Point Estimate</label>
+        <div class="radio" style="margin-top: 0;">
+          <label><input type="radio" name="peradio" ng-model="ctrl.pointEstimate" value="mean" />Mean</label>
+        </div>
+        <div class="radio">
+          <label><input type="radio" name="peradio" ng-model="ctrl.pointEstimate" value="median" />Median</label>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Comparison View type</label>
+        <ui-select ng-model="ctrl.currentView" theme="bootstrap" search-enabled="false">
+          <ui-select-match placeholder="Select a comparison view to use">{{$select.selected}}</ui-select-match>
+          <ui-select-choices repeat="item in ctrl.comparisonViewItems">
+            <div ng-bind-html="item"></div>
+          </ui-select-choices>
+        </ui-select>
+      </div>
+      <div>
+        <label>Attributes to compare</label>
+        <div ng-repeat="attr in ctrl.attributes">
+          <div class="checkbox">
+            <label><input type="checkbox" name="selectedAttrs[]" value="{{attr.key}}" ng-model="attr.selected">{{attr.name}}</label>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

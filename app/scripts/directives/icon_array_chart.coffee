@@ -27,6 +27,7 @@ app.directive 'sdIconArray', ['$document', '$window', '$timeout', '_', 'Util', '
           win.off('resize')
 
         scope.$watch 'data', (nv, ov) ->
+          #console.log "CHANGED!"
           if nv isnt ov
             dataUpdate()
         , true
@@ -198,7 +199,21 @@ app.directive 'sdIconArray', ['$document', '$window', '$timeout', '_', 'Util', '
             pathString += ' L ' + lhex + ' ' + leftOuterArmEndY
             pathString += ' C ' + lsx1 + ' ' + lsy1 + ', ' + lsx2 + ' ' + lsy2 + ', ' + lsex + ' ' + lsey
             pathString
-          ).attr('stroke', color).attr('stroke-width', '1').attr('fill', color)
+          ).attr('stroke', color)
+            .attr('stroke-width', '1').attr('fill', color) #color)
+
+          # totalLength = body.node().getTotalLength()
+          # console.log totalLength
+
+          # body.attr("stroke-dasharray", totalLength + " " + totalLength)
+          #   .attr("stroke-dashoffset", totalLength)
+          #   .transition().duration(1000).ease("linear")
+          #   .attr("stroke-dashoffset", 0)
+          #   .each("end", (d,i) ->
+          #     d3.select(this).transition().duration(500)
+          #       .attr("stroke", color)
+          #       .attr("fill", color)
+          #  )
 
 
         wrap = (textItem, width, label) ->
@@ -232,6 +247,7 @@ app.directive 'sdIconArray', ['$document', '$window', '$timeout', '_', 'Util', '
         dataUpdate = () ->
           thedata = _.flatten(_.map scope.data, (dp, index) -> initArrayItems(dp.value, dp.color, (index + 1) is parseInt(scope.selectedIndex)))
           people.data(thedata)
+          legendItems.data(scope.data)
             
           people.select("path")
             .transition()
@@ -261,7 +277,7 @@ app.directive 'sdIconArray', ['$document', '$window', '$timeout', '_', 'Util', '
           totalLegendHeight = r
           legendItems.select("text")
             .each((d,i) ->
-              wrap(this, svgWidth - (1.75*r) - (4 * r) - (1.75 * r) - (2 * textBorderPadding) - 1,  d.label)
+              wrap(this, svgWidth - (1.75*r) - (4 * r) - (1.75 * r) - (2 * textBorderPadding) - 1,  "#{d.value} out of 100 people (#{d.value}%) #{d.label}")
             )
 
         updateChart = (animate) ->
@@ -287,8 +303,7 @@ app.directive 'sdIconArray', ['$document', '$window', '$timeout', '_', 'Util', '
           legendItems.select("text")
             #.call(wrap, svgWidth - (1.75*r) - (4 * r) - (1.75 * r))
             .each((d,i) ->
-              likeYou = if parseInt(scope.selectedIndex) is (i + 1) then " like you reported" else ""
-              lines = wrap(this, svgWidth - (1.75*r) - (4 * r) - (1.75 * r) - (2 * textBorderPadding) - 1,  d.label + likeYou)
+              lines = wrap(this, svgWidth - (1.75*r) - (4 * r) - (1.75 * r) - (2 * textBorderPadding) - 1,  "#{d.value} out of 100 people (#{d.value}%) #{d.label}")
               #totalLegendHeight += (2 * r)
               parent = d3.select(this.parentNode)
               bounds = this.getBoundingClientRect()
@@ -312,7 +327,7 @@ app.directive 'sdIconArray', ['$document', '$window', '$timeout', '_', 'Util', '
                 #.attr("transform", "translate(0,#{(((biggerHeight + (2 * textBorderPadding)) - itemheight) / 2) - ((lineHeight / 2) / lines)})")
                 .attr("dy", 0)
 
-              lines = wrap(this, svgWidth - (1.75*r) - (4 * r) - (1.75 * r) - (2 * textBorderPadding) - 1, d.label + likeYou)
+              lines = wrap(this, svgWidth - (1.75*r) - (4 * r) - (1.75 * r) - (2 * textBorderPadding) - 1, "#{d.value} out of 100 people (#{d.value}%) #{d.label}")
               
               parent.select("rect").attr("fill", "white")
                 .attr("width", itemWidth + (2 * textBorderPadding))
@@ -504,7 +519,8 @@ app.directive 'sdIconArray', ['$document', '$window', '$timeout', '_', 'Util', '
 
         p = $timeout () =>
           drawChart()
-        , 100
+      
+        
 
 
 

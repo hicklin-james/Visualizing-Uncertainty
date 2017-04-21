@@ -1,0 +1,49 @@
+.area {
+  shape-rendering: geometricPrecision;
+}
+
+.boxplot {
+  shape-rendering: crispEdges;
+  fill: none;
+  stroke: black;
+  stroke-width: 1px;
+}
+
+rect.boxplot {
+  stroke: none !important;
+}
+
+.boxplot.fill {
+  fill: orange !important;
+}
+
+.boxplot.mean, .boxplot.median {
+  fill: white;
+  stroke: white;
+}
+
+.boxplot.mean {
+  shape-rendering: geometricPrecision;
+}
+
+.violin {
+  shape-rendering: geometricPrecision;
+  fill: none !important;
+  stroke: #777;
+  stroke-width: 1px;
+}
+
+.axis path, .axis line {
+  fill: none;
+  stroke: #000;
+  stroke-width: 1px;
+  color-rendering: optimizeQuality !important;
+  shape-rendering: crispEdges !important;
+  text-rendering: geometricPrecision !important; 
+}
+
+.xaxis path, .xaxis line {
+  stroke: #000;
+  stroke-width: 1px;
+  fill: none;
+}

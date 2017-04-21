@@ -1,3 +1,44 @@
+<div ng-if="!ctrl.selectedDefaults">
+  <div class="attributes-wrapper">
+    <h4 class="space-bottom">
+      Some attributes of your treatment may be more important than others. Please select those that are important to you from the list below. You must choose at least 2 attributes to proceed to the visualization.
+    </h4>
+    <div ng-repeat="attr in ctrl.attributes">
+      <div class="attribute-selection-box">
+        <div>
+          <h5 class="inline-block"><i ng-click="ctrl.selectAttribute(attr)" class="fa fa-2x fa-circle-o clickable fa-fw align-middle" ng-class="{'fa-check-circle-o text-success': attr.selected, 'fa-circle-o': !attr.selected}"></i> {{attr.name}}</h5>
+          <p>
+            {{attr.description}}
+          </p>
+        </div>
+      </div>
+    </div>
+    <div class="clearfix space-bottom">
+      <button class="btn btn-primary" ng-disabled="ctrl.selectedAttributes.length < 2" ng-click="ctrl.continueToVis()">Continue</button>
+    </div>
+  </div>
+</div>
+<div class="row" ng-if="ctrl.selectedDefaults">
+  <div class="col-md-3">
+    <div ng-include="'/views/toolbox.html'"></div>
+  </div>
+  <div class="col-md-9">
+    <div ng-switch="ctrl.currentView">
+      <div ng-switch-when="Isotype">
+        <div ng-controller="IsotypeCtrl" ng-include="'/views/isotype_comparison.html'"></div>
+      </div>
+      <div ng-switch-when="Violin">
+        <div ng-controller="ViolinCtrl" ng-include="'/views/violin_comparison.html'"></div>
+      </div>
+      <div ng-switch-when="Gradient">
+        <div ng-controller="GradientCtrl" ng-include="'/views/gradient_comparison.html'"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!--
 <div class="space-all">
   <div class="space-bottom">
     <div class="space-bottom">
@@ -50,3 +91,4 @@
     </div>
   </div>
 </div>
+-->
