@@ -1,7 +1,7 @@
 import numpy as np
 
 def strokeRiskData(data_file):
-  mean = 11.2
+  mean = 25.2
   sd = 4
   sampleSize = 100
   data = np.random.normal(mean, sd, sampleSize)

@@ -1,4 +1,10 @@
 <div id="gradient_comparision_plot">
+  <div class="clearfix">
+    <div class="pull-right">
+      <button class="btn btn-default"><i class="fa fa-fw fa-lg fa-smile-o text-success"></i> Show Best Case Scenario</button>
+      <button class="btn btn-default"><i class="fa fa-fw fa-lg fa-frown-o text-danger"></i> Show Worst Case Scenario</button>
+    </div>
+  </div>
   <div class="row">
     <div class="col-md-12" ng-if="ctrl.gradientData">
       <div sd-gradient-plot sa-use-nine-nine-ci="ctrl.use99" sa-data="ctrl.gradientData" sa-point-estimate="{{ctrl.pointEstimate}}"></div>

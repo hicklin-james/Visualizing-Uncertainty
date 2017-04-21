@@ -11,14 +11,18 @@ app.directive 'sdGradientPlot', ['$document', '$window', '$timeout', '_', 'Util'
   template:"<div id='{{chartid}}-wrapper' class='gradient-chart' style='width: 100%;'>
               <svg id='{{chartid}}'>
                 <linearGradient id='Gradient1' x1='0' x2='0' y1='0' y2='1'>
-                  <stop offset='0%' stop-color='lightblue' stop-opacity='0'/>
-                  <stop offset='50%' stop-color='blue' stop-opacity='1'/>
-                  <stop offset='100%' stop-color='lightblue' stop-opacity='0'/>
+                  <stop offset='0%' stop-color='lightgreen' stop-opacity='0'/>
+                  <stop offset='10%' stop-color='lightgreen' stop-opacity='0.4'/>
+                  <stop offset='50%' stop-color='lightgreen' stop-opacity='1'/>
+                  <stop offset='90%' stop-color='lightgreen' stop-opacity='0.4'/>
+                  <stop offset='100%' stop-color='lightgreen' stop-opacity='0'/>
                 </linearGradient>
                 <linearGradient id='Gradient2' x1='0' x2='0' y1='0' y2='1'>
-                  <stop offset='0%' stop-color='pink' stop-opacity='0'/>
-                  <stop offset='50%' stop-color='red' stop-opacity='1'/>
-                  <stop offset='100%' stop-color='pink' stop-opacity='0'/>
+                  <stop offset='0%' stop-color='#ffbfbb' stop-opacity='0'/>
+                  <stop offset='10%' stop-color='#ffbfbb' stop-opacity='0.4'/>
+                  <stop offset='50%' stop-color='#ffbfbb' stop-opacity='1'/>
+                  <stop offset='90%' stop-color='#ffbfbb' stop-opacity='0.4'/>
+                  <stop offset='100%' stop-color='#ffbfbb' stop-opacity='0'/>
                 </linearGradient>
               </svg>
             </div>"
@@ -69,8 +73,6 @@ app.directive 'sdGradientPlot', ['$document', '$window', '$timeout', '_', 'Util'
         topPadding = 20
         bottomPadding = 150
 
-
-        ## should be confidence interval!
         barWidth = 20
 
         canvas = null
@@ -103,19 +105,10 @@ app.directive 'sdGradientPlot', ['$document', '$window', '$timeout', '_', 'Util'
           items = items.data(thedata, (d) -> d.label)
           updateChart(true)
 
-        updateChart = (animate=false) ->
+        updateExistingItems = () ->
           chartWrapper = d3.select(wrapperid)
           svgWidth = parseInt(chartWrapper.style('width'))
-          #console.log svgWidth
           canvas.style('width', svgWidth + "px")
-
-          itemDivs = items.enter()
-            .append("g")
-            .attr("class", "gradient-item")
-
-          itemRects = itemDivs
-            .append("rect")
-            .attr("class", "gradient-rect")
 
           xScale = d3.scale.ordinal()
             .domain(_.map(thedata, (d) -> d.label))
@@ -133,8 +126,6 @@ app.directive 'sdGradientPlot', ['$document', '$window', '$timeout', '_', 'Util'
 
           rangeBand = xScale.rangeBand()
 
-          itemDivs.attr("transform", "translate(-60,-100)")
-
           items.transition().duration(500).attr("transform", (d, i) ->
             xTranslate = xScale(d.label) + (rangeBand/2) - 10
             yTranslate = yScale(d[peToUse]+d[ciToUse])
@@ -150,6 +141,20 @@ app.directive 'sdGradientPlot', ['$document', '$window', '$timeout', '_', 'Util'
           rects.transition().duration(500).attr("height", (d) -> 
             Math.abs(yScale(d[peToUse] + d[ciToUse]) - yScale(d[peToUse] - d[ciToUse]))
           )
+
+        updateChart = (animate=false) ->
+
+          itemDivs = items.enter()
+            .append("g")
+            .attr("class", "gradient-item")
+
+          itemRects = itemDivs
+            .append("rect")
+            .attr("class", "gradient-rect")
+
+          itemDivs.attr("transform", "translate(-60,-100)")
+
+          updateExistingItems()
 
           items.exit().transition().duration(500).attr("transform", "translate(-60,-100)").remove()
 
@@ -178,7 +183,6 @@ app.directive 'sdGradientPlot', ['$document', '$window', '$timeout', '_', 'Util'
             .attr("class", "gradient-plot-x-axis")
             .attr("transform", "translate(0,#{height-topPadding-bottomPadding})")
 
-
           #itemDivs = items.attr("class", "gradient-item")
 
           #itemRects = itemDivs.append("rect")
@@ -187,7 +191,7 @@ app.directive 'sdGradientPlot', ['$document', '$window', '$timeout', '_', 'Util'
           updateChart()
 
         win.on 'resize', () ->
-          updateChart()
+          updateExistingItems()
 
         $timeout () ->
           drawChart()

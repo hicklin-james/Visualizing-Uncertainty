@@ -19,5 +19,7 @@ class ViolinCtrl
     @violinData =  @_.map attrs, (attr) ->
       color: if attr.deltaDirection then "lightgreen" else "#ffbfbb"
       data: attr.data
+      key: attr.key
+      label: attr.shortLabel
 
 module.controller 'ViolinCtrl', ViolinCtrl

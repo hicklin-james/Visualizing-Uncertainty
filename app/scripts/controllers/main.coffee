@@ -77,7 +77,7 @@ class MainCtrl
     @selectedAttributes = [@strokeRisk, @bleedRisk, @ichRisk, @abdoRisk]
     @selectedDefaults = true
 
-    @currentView = "Isotype"
+    @currentView = "Violin"
     @comparisonViewItems = ["Isotype", "Violin", "Gradient"]
     @uncertaintyDegree = "1"
     @pointEstimate = "mean"
