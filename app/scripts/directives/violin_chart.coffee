@@ -22,14 +22,18 @@ app.directive 'sdViolinPlot', ['$document', '$window', '$timeout', '_', 'Util', 
         scope.$on '$destroy', () ->
           win.off('resize')
 
+        peToUse = scope.pointEstimate
         thedata = scope.data
 
         scope.$watch 'data', (nv, ov) ->
-          #console.log "CHANGED!"
           if nv isnt ov
             thedata = nv
             dataUpdate()
         , true
+
+        scope.$on 'chartPointEstimateChanged', (event, nv) ->
+          peToUse = nv
+          dataUpdate()
 
         id = "#" + scope.chartid
         wrapperid = id + "-wrapper"
@@ -66,9 +70,9 @@ app.directive 'sdViolinPlot', ['$document', '$window', '$timeout', '_', 'Util', 
         boxPlotWidth = 0.2
         imposeMax = 0.25
         resolution = 10
-        interpolation = "basis"
+        interpolation = "bundle"
 
-        pointEstimateRadius = 2
+        pointEstimateRadius = 3
 
         # margin = 
         #   top: 10
@@ -233,36 +237,36 @@ app.directive 'sdViolinPlot', ['$document', '$window', '$timeout', '_', 'Util', 
           quartileProbs = [0.05,0.25,0.5,0.75,0.95]
           quartiles = []
           _.each quartileProbs, (q) ->
-            quartiles.push y(d3.quantile(d.data, q))
+            quartiles.push d3.quantile(d.data, q)
 
           item.select('.iqr')
             .transition().duration(500)
             .attr('x', x(left))
             .attr('width', x(right) - x(left))
-            .attr('y', quartiles[3])
-            .attr('height', -quartiles[3] + quartiles[1])
+            .attr('y', y(quartiles[3]))
+            .attr('height', -y(quartiles[3]) + y(quartiles[1]))
             .attr('stroke', "black")
             .attr("stroke-width", 1)
             .attr("fill", "none")
 
-          mean = Util.arrMean(d.data)
+          pe = if peToUse is "mean" then y(Util.arrMean(d.data)) else y(quartiles[2])
 
           item.select(".point-estimate")
             .transition().duration(500)
             .attr("r", pointEstimateRadius)
             .attr("fill", "white")
-            .attr("stroke", "white")
-            .attr("cx", x(left + (boxPlotWidth / 2)))
-            .attr("cy", y(mean))
-
-          item.select(".qr-half")
-            .transition().duration(500)
-            .attr('x1', x(left))
-            .attr('y1', quartiles[2])
-            .attr('x2', x(left + boxPlotWidth))
-            .attr('y2', quartiles[2])
             .attr("stroke", "black")
-            .attr("stroke-width", 1)
+            .attr("cx", x(left + (boxPlotWidth / 2)))
+            .attr("cy", pe)
+
+          # item.select(".qr-half")
+          #   .transition().duration(500)
+          #   .attr('x1', x(left))
+          #   .attr('y1', quartiles[2])
+          #   .attr('x2', x(left + boxPlotWidth))
+          #   .attr('y2', quartiles[2])
+          #   .attr("stroke", "black")
+          #   .attr("stroke-width", 1)
 
 
         drawViolin = (item, d) ->
@@ -271,35 +275,37 @@ app.directive 'sdViolinPlot', ['$document', '$window', '$timeout', '_', 'Util', 
           y = d3.scale.linear().range([maxViolinWidth / 2, 0])
             .domain([0, Math.max(imposeMax, d3.max(violinData, (d) -> d.y))])
 
-          x = d3.scale.linear().range([height-topPadding-bottomPadding, 0])
-            .domain([min_bound, max_bound]).nice()
+          x = d3.scale.linear().range([height-bottomPadding-topPadding, 0])
+            .domain([min_bound, max_bound])
 
-          area = d3.svg.area().interpolate(interpolation).x((d) ->
-            if interpolation == 'step-before'
-              return x(d.x + d.dx / 2)
-            x d.x
-          ).y0(maxViolinWidth / 2).y1((d) ->
-            y d.y
+          area = d3.svg.area().interpolate(interpolation).x((dd) ->
+            x(dd.x)
+          ).y0(maxViolinWidth / 2).y1((dd) ->
+            y(dd.y)
           )
 
-          line = d3.svg.line().interpolate(interpolation).x((d) ->
-            if interpolation == 'step-before'
-              return x(d.x + d.dx / 2)
-            x d.x
-          ).y((d) ->
-            y d.y
+          line = d3.svg.line().interpolate(interpolation).x((dd) ->
+            x(dd.x)
+          ).y((dd) ->
+            y(dd.y)
           )
 
           gPlus = item.select('.g-plus')
           gMinus = item.select('.g-minus')
-          gPlus.select('.area').datum(violinData).transition().duration(500).attr('d', area).style 'fill', d.color
-          gPlus.select('.line').datum(violinData).transition().duration(500).attr('d', line).style 'stroke', d.color
-          gMinus.select('.area').datum(violinData).transition().duration(500).attr('d', area).style 'fill', d.color
-          gMinus.select('.line').datum(violinData).transition().duration(500).attr('d', line).style 'stroke', d.color
-          x = maxViolinWidth
-          gPlus.attr 'transform', 'rotate(90,0,0)  translate(0,-' + maxViolinWidth + ')'
-          #translate(0,-200)");
-          gMinus.attr 'transform', 'rotate(90,0,0) scale(1,-1)'
+          gPlus.select('.area').transition().duration(500).attr('d', area(violinData))
+            .attr('fill', d.color)
+          gPlus.select('.violin').transition().duration(500).attr('d', line(violinData))
+            .attr("stroke-width", 1)
+            .attr('stroke', d.color)
+            .attr("fill", "none")
+          gMinus.select('.area').transition().duration(500).attr('d', area(violinData))
+            .attr('fill', d.color)
+          gMinus.select('.violin').transition().duration(500).attr('d', line(violinData))
+            .attr("stroke-width", 1)
+            .attr('stroke', d.color)
+            .attr("fill", "none")
+          gPlus.attr 'transform', "rotate(90,0,0) translate(0,#{-maxViolinWidth})"
+          gMinus.attr 'transform', "rotate(90,0,0) scale(1,-1)"
 
         updateExistingItems = () ->
           chartWrapper = d3.select(wrapperid)
@@ -328,6 +334,8 @@ app.directive 'sdViolinPlot', ['$document', '$window', '$timeout', '_', 'Util', 
             .selectAll("text")  
             .style("text-anchor", "end")
             .attr("dx", "-.8em")
+            
+          xAxisDrawn.selectAll("text")
             .attr("dy", ".15em")
             .attr("transform", "rotate(-40)");
 
@@ -339,8 +347,8 @@ app.directive 'sdViolinPlot', ['$document', '$window', '$timeout', '_', 'Util', 
               "translate(#{xTranslate},0)"
             )
             .each((d, i) ->
-              drawViolin(d3.select(this), d)
               drawBoxPlot(d3.select(this), d)
+              drawViolin(d3.select(this), d)
             )
           #rangeBand = xScale.rangeBand()
 

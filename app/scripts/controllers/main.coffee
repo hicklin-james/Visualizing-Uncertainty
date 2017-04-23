@@ -10,8 +10,8 @@ module = angular.module('547ProjectApp')
  # Controller of the 547ProjectApp
 ###
 class MainCtrl
-  @$inject: ['$scope', 'filterFilter', '$interval', 'DiseaseAttribute', '$timeout', 'Util']
-  constructor: (@$scope, @filterFilter, @$interval, @DiseaseAttribute, @$timeout, @Util) ->
+  @$inject: ['$scope', 'filterFilter', '$interval', 'DiseaseAttribute', '$timeout', 'Util', '_']
+  constructor: (@$scope, @filterFilter, @$interval, @DiseaseAttribute, @$timeout, @Util, @_) ->
 
     @$scope.ctrl = @
 
@@ -33,7 +33,6 @@ class MainCtrl
       shortLabel: "Decrease risk of stroke"
       iconArrayLabels: ["don't have a stroke", "saved from having a stroke", "have a stroke anyways"]
       description: "Your risk of stroke will decrease if you choose to take warfarin"
-      deltaDirection: true
 
     bleedRiskAttrs = 
       key: "bleedRisk"
@@ -42,7 +41,6 @@ class MainCtrl
       iconArrayLabels: ["don't have a major bleed", "have a major bleed anyways", "have a major bleed caused by warfarin"]
       shortLabel: "Increase risk of bleed"
       description: "Taking warfarin can increase your risk of major internal bleed"
-      deltaDirection: false
 
     ichRiskAttrs = 
       key: "ichRisk"
@@ -51,7 +49,6 @@ class MainCtrl
       iconArrayLabels: ["don't have an intercranial hemmorhage", "have an intercranial hemmorhage anyways", "have an intercranial hemmorhage caused by warfarin"]
       shortLabel: "Increase risk of hemorrhage"
       description: "Taking warfarin can increase your risk of an intercranial hemorrhage"
-      deltaDirection: false
 
     abdoPainRiskAttrs = 
       key: "abdoPain"
@@ -60,8 +57,9 @@ class MainCtrl
       iconArrayLabels: ["don't have any abdominal pain", "already have abdominal pain", "develop abdominal pain from taking warfarin"]
       shortLabel: "Increase risk of abdominal pain"
       description: "Taking warfarin can increase your risk of abdominal pain."
-      deltaDirection: false
 
+    
+    @attrInputs = [strokeRiskAttrs, bleedRiskAttrs, ichRiskAttrs, abdoPainRiskAttrs]
     @strokeRisk = new @DiseaseAttribute(strokeRiskAttrs)
     @bleedRisk = new @DiseaseAttribute(bleedRiskAttrs)
     @ichRisk = new @DiseaseAttribute(ichRiskAttrs)
@@ -83,10 +81,41 @@ class MainCtrl
     @pointEstimate = "mean"
 
   selectedAttrs: () ->
-    @filterFilter(@attributes, {selected: true})
+    if @resampled
+      @filterFilter @sampledAttrs, {selected: true}
+    else
+      @filterFilter(@attributes, {selected: true})
+
+  bestCaseFromCurrentDataSet: () ->
+    @showBestCase = !@showBestCase
+    @showWorstCase = false
+    @$scope.$broadcast 'showBestCase', @showBestCase
+
+  worstCaseFromCurrentDataSet: () ->
+    @showWorstCase = !@showWorstCase
+    @showBestCase = false 
+    @$scope.$broadcast 'showWorstCase', @showWorstCase
+
+  randomlySample: () ->
+    @sampledAttrs = []
+    @_.each @attributes, (attr, index) =>
+      randomSample = @Util.randomlySampleArray(10, attr.data)
+      newAttr = new @DiseaseAttribute(@attrInputs[index], randomSample)
+      newAttr.selected = attr.selected
+      @sampledAttrs.push newAttr
+
+    @resampled = true
+    @selectedAttributes = @selectedAttrs()
+    #console.log @selectedAttributes
+    @$scope.$broadcast 'chartDataChanged', @selectedAttributes
 
   continueToVis: () ->
     @selectedDefaults = true
+
+  resetAll: () ->
+    @resampled = false
+    @selectedAttributes = @selectedAttrs()
+    @$scope.$broadcast 'chartDataChanged', @selectedAttributes
 
   selectAttribute: (attr) ->
     i = @selectedAttributes.indexOf(attr)

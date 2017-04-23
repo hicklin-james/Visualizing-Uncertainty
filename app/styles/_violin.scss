@@ -25,14 +25,14 @@ rect.boxplot {
 .boxplot.mean {
   shape-rendering: geometricPrecision;
 }
-
+/**
 .violin {
   shape-rendering: geometricPrecision;
   fill: none !important;
   stroke: #777;
   stroke-width: 1px;
 }
-
+**/
 .axis path, .axis line {
   fill: none;
   stroke: #000;

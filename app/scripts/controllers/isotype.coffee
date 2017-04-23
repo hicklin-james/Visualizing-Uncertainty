@@ -7,14 +7,19 @@ class IsotypeCtrl
   constructor: (@$scope, @$interval, @DiseaseAttribute, @Util, @_) ->
 
     @selectedAttributes = @$scope.$parent.$parent.ctrl.selectedAttributes
+    @pointEstimate = @$scope.$parent.$parent.ctrl.pointEstimate
 
     @$scope.ctrl = @
 
     @convertAttributesToUsableIsotypeData(@selectedAttributes)
 
+    @$scope.$on 'chartPointEstimateChanged', (event, nv) =>
+      @pointEstimate = nv
+      @convertAttributesToUsableIsotypeData(@selectedAttributes)
+
     @$scope.$on "chartDataChanged", (event, nv) =>
       @selectedAttributes = nv
-      @convertAttributesToUsableIsotypeData(nv)
+      @convertAttributesToUsableIsotypeData(@selectedAttributes)
 
     # @strokeRiskData = new @StrokeRisk
     # @strokeLabels = ["don't have a stroke", "saved from having a stroke", "have a stroke"]
@@ -30,7 +35,7 @@ class IsotypeCtrl
     @chunkedIsotypeData = @Util.chunkArray(angular.copy(@isotypeData), 2)
 
   setIsotypeData: (dataAttr) ->
-    baseline = Math.round(dataAttr.mean)
+    baseline = Math.abs(Math.round(dataAttr[@pointEstimate]))
     delta = Math.round(dataAttr.delta * 100)
     if dataAttr.deltaDirection
       combined = baseline + delta

@@ -12,7 +12,7 @@ app.directive 'sdIconArray', ['$document', '$window', '$timeout', '_', 'Util', '
     numPerRow: "@saNumPerRow"
     selectedIndex: "@saSelectedIndex"
     includeAxis: "@saIncludeAxis"
-  template:"<div id='{{chartid}}-wrapper' class='icon-array-chart' style='width: 100%;'>
+  template:"<div id='{{chartid}}-wrapper' class='icon-array-chart' style='width: 95%;'>
               <svg id='{{chartid}}'></svg>
             </div>"
   compile: ($element, attr) ->    

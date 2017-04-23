@@ -1,9 +1,9 @@
 import numpy as np
 
 def strokeRiskData(data_file):
-  mean = 25.2
+  mean = -25.2
   sd = 4
-  sampleSize = 100
+  sampleSize = 1000
   data = np.random.normal(mean, sd, sampleSize)
   warfarinDelta = 0.07
 
@@ -16,8 +16,8 @@ def strokeRiskData(data_file):
 
 def bleedRiskData(data_file):
   mean = 25.3
-  sd = 12
-  sampleSize = 20
+  sd = 20
+  sampleSize = 30
   data = np.random.normal(mean, sd, sampleSize)
   bleedDelta = 0.1
 
@@ -31,7 +31,7 @@ def bleedRiskData(data_file):
 def ichRiskData(data_file):
   mean = 9.3
   sd = 2.8
-  sampleSize = 400
+  sampleSize = 140
   data = np.random.normal(mean, sd, sampleSize)
   ichDelta = 0.06
 
@@ -45,8 +45,8 @@ def ichRiskData(data_file):
 
 def abdoRiskData(data_file):
   mean = 37
-  sd = 25
-  sampleSize = 200
+  sd = 30
+  sampleSize = 20
   data = np.random.normal(mean, sd, sampleSize)
   abdoPainDelta = 0.06
 

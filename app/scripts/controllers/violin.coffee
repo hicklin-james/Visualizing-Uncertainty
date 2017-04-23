@@ -7,6 +7,7 @@ class ViolinCtrl
   constructor: (@$scope, @$interval, @DiseaseAttribute, @Util, @_) ->
 
     selectedAttributes = @$scope.$parent.$parent.ctrl.selectedAttributes
+    @pointEstimate = @$scope.$parent.$parent.ctrl.pointEstimate
 
     @$scope.ctrl = @
 

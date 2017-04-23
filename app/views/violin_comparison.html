@@ -1,11 +1,7 @@
 <div id="violin_comparision_plot">
-  <div class="pull-right">
-    <button class="btn btn-default"><i class="fa fa-fw fa-lg fa-smile-o text-success"></i> Show Best Case Scenario</button>
-    <button class="btn btn-default"><i class="fa fa-fw fa-lg fa-frown-o text-danger"></i> Show Worst Case Scenario</button>
-  </div>
   <div class="row">
     <div class="col-md-12" ng-if="ctrl.violinData">
-      <div sd-violin-plot sa-data="ctrl.violinData"></div>
+      <div sd-violin-plot sa-data="ctrl.violinData" sa-point-estimate="{{ctrl.pointEstimate}}"></div>
     </div>
   </div>
 </div>
