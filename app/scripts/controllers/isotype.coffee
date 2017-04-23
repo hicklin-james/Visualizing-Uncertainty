@@ -8,6 +8,9 @@ class IsotypeCtrl
 
     @selectedAttributes = @$scope.$parent.$parent.ctrl.selectedAttributes
     @pointEstimate = @$scope.$parent.$parent.ctrl.pointEstimate
+    @ciToUse = @$scope.$parent.$parent.ctrl.degUncert
+    @bestcase = @$scope.$parent.$parent.ctrl.showBestCase
+    @worstcase = @$scope.$parent.$parent.ctrl.showWorstCase
 
     @$scope.ctrl = @
 
@@ -20,6 +23,28 @@ class IsotypeCtrl
     @$scope.$on "chartDataChanged", (event, nv) =>
       @selectedAttributes = nv
       @convertAttributesToUsableIsotypeData(@selectedAttributes)
+
+    @$scope.$on 'chartUncertaintyChanged', (event, nv) =>
+      if nv is "1"
+        @ciToUse = "ci95"
+      else
+        @ciToUse = "ci99"
+      
+      @convertAttributesToUsableIsotypeData(@selectedAttributes)
+
+
+    @$scope.$on 'showBestCase', (e, nv) =>
+      @worstcase = false
+      @bestcase = nv
+      @convertAttributesToUsableIsotypeData(@selectedAttributes)
+      #toggleBestWorstScenarios()
+
+    @$scope.$on 'showWorstCase', (e, nv) =>
+      @bestcase = false
+      @worstcase = nv
+      @convertAttributesToUsableIsotypeData(@selectedAttributes)
+
+      #toggleBestWorstScenarios()
 
     # @strokeRiskData = new @StrokeRisk
     # @strokeLabels = ["don't have a stroke", "saved from having a stroke", "have a stroke"]
@@ -35,11 +60,25 @@ class IsotypeCtrl
     @chunkedIsotypeData = @Util.chunkArray(angular.copy(@isotypeData), 2)
 
   setIsotypeData: (dataAttr) ->
-    baseline = Math.abs(Math.round(dataAttr[@pointEstimate]))
+    baseline = null
+
+    if @bestcase
+      if dataAttr.deltaDirection
+        baseline = Math.abs(Math.round(dataAttr[@pointEstimate] + dataAttr[@ciToUse]))
+      else
+        baseline = Math.abs(Math.round(dataAttr[@pointEstimate] - dataAttr[@ciToUse])) 
+    else if @worstcase
+      if dataAttr.deltaDirection
+        baseline = Math.abs(Math.round(dataAttr[@pointEstimate] - dataAttr[@ciToUse]))
+      else
+        baseline = Math.abs(Math.round(dataAttr[@pointEstimate] + dataAttr[@ciToUse]))        
+    else
+      baseline = Math.abs(Math.round(dataAttr[@pointEstimate]))
+
     delta = Math.round(dataAttr.delta * 100)
     if dataAttr.deltaDirection
       combined = baseline + delta
-      rest = 100 - combined
+      rest = 100 - baseline
       d = 
         attachedData: dataAttr.data
         key: dataAttr.key
@@ -49,13 +88,9 @@ class IsotypeCtrl
           color: "lightgreen"
           label: dataAttr.iconArrayLabels[0]
          ,
-          value: delta
+          value: baseline
           color: "lightblue"
           label: dataAttr.iconArrayLabels[1]
-         ,
-          value: baseline
-          color: "#ffbfbb"
-          label: dataAttr.iconArrayLabels[2]
         ].reverse()
       d
     else
@@ -70,13 +105,9 @@ class IsotypeCtrl
           color: "lightgreen"
           label: dataAttr.iconArrayLabels[0]
          ,
-          value: delta
-          color: "#ffdb89"
-          label: dataAttr.iconArrayLabels[1]
-         ,
-          value: combined
+          value: baseline
           color: "#ffbfbb"
-          label: dataAttr.iconArrayLabels[2]
+          label: dataAttr.iconArrayLabels[1]
         ].reverse()
       d
 

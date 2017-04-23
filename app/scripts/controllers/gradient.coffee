@@ -20,7 +20,7 @@ class GradientCtrl
 
   convertAttributesToUsableGradientData: (attrs) ->
     @gradientData =  @_.map attrs, (attr) ->
-      label: attr.shortLabel
+      label: attr.label
       mean: attr.mean
       median: attr.median
       ci95: attr.ci95

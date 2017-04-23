@@ -173,7 +173,7 @@ app.directive 'sdGradientPlot', ['$document', '$window', '$timeout', '_', 'Util'
                 Math.abs(gradientTop - yzero) - (minPeHeight / 2)
             )
             .attr("y", (d) ->
-              if d[peToUse] > 0
+              if d[peToUse] + d[ciToUse] > 0
                 # y pos of bottom of gradient bar
                 gradientTop = -Math.abs(yScale(d[peToUse] + d[ciToUse]) - yScale(d[peToUse])) - (minPeHeight / 2)
                 gradientTop
@@ -191,11 +191,13 @@ app.directive 'sdGradientPlot', ['$document', '$window', '$timeout', '_', 'Util'
                 Math.abs(gradientBottom - yzero) - (minPeHeight / 2)
             )
             .attr("y", (d) ->
-              if d[peToUse] > 0
+              if d[peToUse] > 0 and d[peToUse] - d[ciToUse] > 0
                 # y pos of bottom of gradient bar
                 gradientBottom = Math.abs(yScale(d[peToUse] + d[ciToUse]) - yScale(d[peToUse])) - (minPeHeight / 2)
                 gradientBottom
-              else
+              else if d[peToUse] > 0 and d[peToUse] - d[ciToUse] < 0
+                Math.abs(yScale(0) - yScale(d[peToUse]))
+              else  
                 -(Math.abs(yScale(0) - yScale(d[peToUse])))
             )
             .attr("x", -barWidth/2)

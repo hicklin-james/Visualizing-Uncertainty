@@ -44,7 +44,7 @@ app.directive 'sdViolinPlot', ['$document', '$window', '$timeout', '_', 'Util', 
         leftPadding = 30
         rightPadding = 20
         topPadding = 20
-        bottomPadding = 150
+        bottomPadding = 180
 
 
         canvas = null
