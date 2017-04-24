@@ -2,7 +2,6 @@
 
 app = angular.module('547ProjectApp')
 
-# when clicking the element, it will trigger a browser back operation
 app.directive 'sdViolinPlot', ['$document', '$window', '$timeout', '_', 'Util', '$sce', ($document, $window, $timeout, _, Util, $sce) ->
   scope:
     data: "=saData"
@@ -16,37 +15,50 @@ app.directive 'sdViolinPlot', ['$document', '$window', '$timeout', '_', 'Util', 
         scope.chartid = Util.makeId()
 
       post: (scope, element, attrs) ->
-        # colors
-        # #BEFAD7, #82D78C, #CD913C, #DE2D26, #A50F15
-
         scope.$on '$destroy', () ->
           win.off('resize')
 
+        # grab scope parameters from directive 
         peToUse = scope.pointEstimate
         thedata = scope.data
 
+        # deep watch the input data for changes, update
+        # chart if necessary
         scope.$watch 'data', (nv, ov) ->
           if nv isnt ov
             thedata = nv
             dataUpdate()
         , true
 
+        # when the point estimate type changes, an event will
+        # be broadcast. Catch that even and update the data
         scope.$on 'chartPointEstimateChanged', (event, nv) ->
           peToUse = nv
           dataUpdate()
 
+        # set some variables to make chart access easier
         id = "#" + scope.chartid
         wrapperid = id + "-wrapper"
 
+        # get the window to tap into resize events
         win = angular.element($window)
 
+        # constants
         height = 500
-        leftPadding = 30
+        leftPadding = 90
         rightPadding = 20
         topPadding = 20
         bottomPadding = 180
 
+        maxViolinWidth = 70
+        boxPlotWidth = 0.2
+        imposeMax = 0.25
+        resolution = 10
+        interpolation = "bundle"
 
+        pointEstimateRadius = 3
+
+        # initializing variables
         canvas = null
         chart = null
         yScale = null
@@ -66,270 +78,129 @@ app.directive 'sdViolinPlot', ['$document', '$window', '$timeout', '_', 'Util', 
         min_bound = null
         max_bound = null
 
-        maxViolinWidth = 70
-        boxPlotWidth = 0.2
-        imposeMax = 0.25
-        resolution = 10
-        interpolation = "bundle"
+        yPositiveLabel = null
+        yNegativeLabel = null
+        yAxisLabel = null
 
-        pointEstimateRadius = 3
-
-        # margin = 
-        #   top: 10
-        #   bottom: 10
-        #   left: 35
-        #   right: 10
-        # #width = 600
-        # height = 500
-        # boxWidth = 100
-        # #boxSpacing = 10
-        # domain = [
-        #   -10
-        #   35
-        # ]
-
-        # resolution = 10
-        # interpolation = 'step-before'
-        # y = d3.scale.linear().range([
-        #   height - (margin.bottom)
-        #   margin.top
-        # ]).domain(domain)
-        # yAxis = d3.svg.axis().scale(y).ticks(5).orient('left').tickSize(5, 0, 5)
-
-        # interpolation = 'basis'
-
-        # addViolin = (svg, results, height, width, domain, imposeMax, violinColor) ->
-        #   data = d3.layout.histogram().bins(resolution).frequency(0)(results)
-        #   y = d3.scale.linear().range([
-        #     width / 2
-        #     0
-        #   ]).domain([
-        #     0
-        #     Math.max(imposeMax, d3.max(data, (d) ->
-        #       d.y
-        #     ))
-        #   ])
-        #   x = d3.scale.linear().range([
-        #     height
-        #     0
-        #   ]).domain(domain).nice()
-        #   area = d3.svg.area().interpolate(interpolation).x((d) ->
-        #     if interpolation == 'step-before'
-        #       return x(d.x + d.dx / 2)
-        #     x d.x
-        #   ).y0(width / 2).y1((d) ->
-        #     y d.y
-        #   )
-        #   line = d3.svg.line().interpolate(interpolation).x((d) ->
-        #     if interpolation == 'step-before'
-        #       return x(d.x + d.dx / 2)
-        #     x d.x
-        #   ).y((d) ->
-        #     y d.y
-        #   )
-        #   gPlus = svg.append('g')
-        #   gMinus = svg.append('g')
-        #   gPlus.append('path').datum(data).attr('class', 'area').attr('d', area).style 'fill', violinColor
-        #   gPlus.append('path').datum(data).attr('class', 'violin').attr('d', line).style 'stroke', violinColor
-        #   gMinus.append('path').datum(data).attr('class', 'area').attr('d', area).style 'fill', violinColor
-        #   gMinus.append('path').datum(data).attr('class', 'violin').attr('d', line).style 'stroke', violinColor
-        #   x = width
-        #   gPlus.attr 'transform', 'rotate(90,0,0)  translate(0,-' + width + ')'
-        #   #translate(0,-200)");
-        #   gMinus.attr 'transform', 'rotate(90,0,0) scale(1,-1)'
-        #   return
-
-        # addBoxPlot = (svg, results, height, width, domain, boxPlotWidth, boxColor, boxInsideColor) ->
-        #   y = d3.scale.linear().range([
-        #     height
-        #     0
-        #   ]).domain(domain)
-        #   x = d3.scale.linear().range([
-        #     0
-        #     width
-        #   ])
-        #   left = 0.5 - (boxPlotWidth / 2)
-        #   right = 0.5 + boxPlotWidth / 2
-        #   probs = [
-        #     0.05
-        #     0.25
-        #     0.5
-        #     0.75
-        #     0.95
-        #   ]
-        #   i = 0
-        #   while i < probs.length
-        #     probs[i] = y(d3.quantile(results, probs[i]))
-        #     i++
-        #   svg.append('rect').attr('class', 'boxplot fill').attr('x', x(left)).attr('width', x(right) - x(left)).attr('y', probs[3]).attr('height', -probs[3] + probs[1]).style 'fill', boxColor
-        #   iS = [
-        #     0
-        #     2
-        #     4
-        #   ]
-        #   iSclass = [
-        #     ''
-        #     'median'
-        #     ''
-        #   ]
-        #   iSColor = [
-        #     boxColor
-        #     boxInsideColor
-        #     boxColor
-        #   ]
-        #   i = 0
-        #   while i < iS.length
-        #     svg.append('line').attr('class', 'boxplot ' + iSclass[i]).attr('x1', x(left)).attr('x2', x(right)).attr('y1', probs[iS[i]]).attr('y2', probs[iS[i]]).style('fill', iSColor[i]).style 'stroke', iSColor[i]
-        #     i++
-        #   iS = [
-        #     [
-        #       0
-        #       1
-        #     ]
-        #     [
-        #       3
-        #       4
-        #     ]
-        #   ]
-        #   i = 0
-        #   while i < iS.length
-        #     svg.append('line').attr('class', 'boxplot').attr('x1', x(0.5)).attr('x2', x(0.5)).attr('y1', probs[iS[i][0]]).attr('y2', probs[iS[i][1]]).style 'stroke', boxColor
-        #     i++
-        #   svg.append('rect').attr('class', 'boxplot').attr('x', x(left)).attr('width', x(right) - x(left)).attr('y', probs[3]).attr('height', -probs[3] + probs[1]).style 'stroke', boxColor
-        #   svg.append('circle').attr('class', 'boxplot mean').attr('cx', x(0.5)).attr('cy', y(d3.mean(results))).attr('r', x(boxPlotWidth / 5)).style('fill', boxInsideColor).style 'stroke', 'None'
-        #   svg.append('circle').attr('class', 'boxplot mean').attr('cx', x(0.5)).attr('cy', y(d3.mean(results))).attr('r', x(boxPlotWidth / 10)).style('fill', boxColor).style 'stroke', 'None'
-
-        # drawViolinPlot = () ->
-        #   chartWrapper = d3.select(wrapperid)
-        #   width = parseInt(chartWrapper.style('width'))
-        #   x = d3.scale.linear().range([
-        #     0
-        #     width - margin.right - margin.left
-        #   ]).domain([0..results.length])
-        #   xAxis = d3.svg.axis().scale(x).ticks(0)
-        #   #console.log width
-        #   svg = d3.select(id).attr('height', height).attr('width', width)
-        #   svg.append('line').attr('class', 'boxplot').attr('x1', margin.left).attr('x2', width - (margin.right)).attr('y1', y(0)).attr 'y2', y(0)
-          
-        #   itemWidth = (width / results.length) - margin.left - margin.right
-        #   midPointItem = itemWidth / 2
-
-        #   i = 0
-
-        #   while i < results.length
-        #     leftSpace = (itemWidth * i) + margin.left + midPointItem - (boxWidth / 2)
-        #     results[i].data = results[i].data.sort(d3.ascending)
-        #     g = svg.append('g').attr('transform', 'translate(' + leftSpace + ',0)')
-        #     addViolin g, results[i].data, height, boxWidth, domain, 0.25, results[i].color
-        #     addBoxPlot g, results[i].data, height, boxWidth, domain, .15, 'black', 'white'
-        #     i++
-          
-        #   svg.append('g').attr('class', 'axis').attr('transform', 'translate(' + margin.left + ',0)').call yAxis
-        #   svg.append('g').attr('class', 'xaxis').attr('transform', "translate(#{margin.left}, #{y(0)})").call xAxis
-
-        drawBoxPlot = (item, d) ->
-          y = d3.scale.linear().range([height-topPadding-bottomPadding, 0]).domain([min_bound, max_bound])
-          x = d3.scale.linear().range([0, maxViolinWidth])
-
-          left = 0.5 - (boxPlotWidth / 2)
-          right = 0.5 + (boxPlotWidth / 2)
-          
+        
+        ### D3 drawing & updating functions ###
+        ### ------------------------------- ###
+        
+        ###
+          Input:
+            data -> data to get boxplot quartiles for
+          Returns:
+            [Float] -> array of floats representing data quartiles 
+        ###
+        getBoxPlotQuartiles = (itemData) ->
           quartileProbs = [0.05,0.25,0.5,0.75,0.95]
           quartiles = []
           _.each quartileProbs, (q) ->
-            quartiles.push d3.quantile(d.data, q)
+            # d3.quantile returns quantile at probability for input data
+            quartiles.push d3.quantile(itemData, q)
+          quartiles
 
+        ### 
+          Input:
+            item -> d3 selection that represents boxplot wrapper
+            d -> data associated with item
+            itemXScale -> d3 x scale for box
+          Description:
+            Updates the box plot attributes with new values according to 
+            input `item` corresponding to data `d`    
+        ###
+        updateBoxPlot = (item, d, itemXScale) ->
+          # get bounds for plot
+          left = 0.5 - (boxPlotWidth / 2)
+          right = 0.5 + (boxPlotWidth / 2)
+          
+          quartiles = getBoxPlotQuartiles(d.data)
+
+          # update interquartile range rect with new values
           item.select('.iqr')
             .transition().duration(500)
-            .attr('x', x(left))
-            .attr('width', x(right) - x(left))
-            .attr('y', y(quartiles[3]))
-            .attr('height', -y(quartiles[3]) + y(quartiles[1]))
-            .attr('stroke', "black")
-            .attr("stroke-width", 1)
-            .attr("fill", "none")
+            .attr('x', itemXScale(left))
+            .attr('width', itemXScale(right) - itemXScale(left))
+            .attr('y', yScale(quartiles[3]))
+            .attr('height', -yScale(quartiles[3]) + yScale(quartiles[1]))
 
-          pe = if peToUse is "mean" then y(Util.arrMean(d.data)) else y(quartiles[2])
+          pe = if peToUse is "mean" then yScale(Util.arrMean(d.data)) else yScale(quartiles[2])
 
+          # update point estimate circle with new values
           item.select(".point-estimate")
             .transition().duration(500)
-            .attr("r", pointEstimateRadius)
-            .attr("fill", "white")
-            .attr("stroke", "black")
-            .attr("cx", x(left + (boxPlotWidth / 2)))
+            .attr("cx", itemXScale(left + (boxPlotWidth / 2)))
             .attr("cy", pe)
 
-          # item.select(".qr-half")
-          #   .transition().duration(500)
-          #   .attr('x1', x(left))
-          #   .attr('y1', quartiles[2])
-          #   .attr('x2', x(left + boxPlotWidth))
-          #   .attr('y2', quartiles[2])
-          #   .attr("stroke", "black")
-          #   .attr("stroke-width", 1)
-
-
-        drawViolin = (item, d) ->
+        ### 
+          Input:
+            item -> d3 selection that represents violin wrapper
+            d -> data associated with item
+          Description:
+            Updates the violin attributes with new values according to 
+            input `item` corresponding to data `d`. The violin creation
+            has three main steps:
+              1. Get a histogram of the underlying data
+              2. Construct an area as if the violin was on the xaxis
+              3. Draw the area and rotate 90 degrees - this will show
+                 half the violin. Do the same thing again and mirror
+                 the area - now we have a full violin.
+        ###
+        updateViolin = (item, d) ->
+          # use d3 histogram layout to bin the data
           violinData = d3.layout.histogram().bins(resolution).frequency(0)(d.data)
 
-          y = d3.scale.linear().range([maxViolinWidth / 2, 0])
-            .domain([0, Math.max(imposeMax, d3.max(violinData, (d) -> d.y))])
+          # create scale from 0 to max y-value in binned histogram data. Remember that axis will
+          # be flipped so we want max y-value instead of x-value
+          x = d3.scale.linear().range([maxViolinWidth / 2, 0])
+            .domain([0, _.max(violinData, (d) -> d.y).y])
 
-          x = d3.scale.linear().range([height-bottomPadding-topPadding, 0])
-            .domain([min_bound, max_bound])
-
+          # create area function using our scales
           area = d3.svg.area().interpolate(interpolation).x((dd) ->
-            x(dd.x)
+            yScale(dd.x)
           ).y0(maxViolinWidth / 2).y1((dd) ->
-            y(dd.y)
+            x(dd.y)
           )
 
-          line = d3.svg.line().interpolate(interpolation).x((dd) ->
-            x(dd.x)
-          ).y((dd) ->
-            y(dd.y)
-          )
-
+          # grab our violin item wrappers
           gPlus = item.select('.g-plus')
           gMinus = item.select('.g-minus')
+
+          # update violin areas with new data
           gPlus.select('.area').transition().duration(500).attr('d', area(violinData))
             .attr('fill', d.color)
-          gPlus.select('.violin').transition().duration(500).attr('d', line(violinData))
-            .attr("stroke-width", 1)
-            .attr('stroke', d.color)
-            .attr("fill", "none")
           gMinus.select('.area').transition().duration(500).attr('d', area(violinData))
             .attr('fill', d.color)
-          gMinus.select('.violin').transition().duration(500).attr('d', line(violinData))
-            .attr("stroke-width", 1)
-            .attr('stroke', d.color)
-            .attr("fill", "none")
-          gPlus.attr 'transform', "rotate(90,0,0) translate(0,#{-maxViolinWidth})"
+
+          # rotate areas so that they show as violins
+          gPlus.attr 'transform', "rotate(90,0,0) translate(0,#{-maxViolinWidth+1})"
           gMinus.attr 'transform', "rotate(90,0,0) scale(1,-1)"
 
-        updateExistingItems = () ->
+
+        ###
+          Description:
+            Helper function that updates the x axis and zero axis with 
+            the current data
+        ###
+        updateXAxis = () ->
+          # modify svg width based on parent width
           chartWrapper = d3.select(wrapperid)
           svgWidth = parseInt(chartWrapper.style('width'))
           canvas.style('width', svgWidth + "px")
 
-          xScale = d3.scale.ordinal()
+          # set xscale domain and range based on new width and new data
+          xScale
             .domain(_.map(thedata, (d) -> d.label))
             .rangeBands([0, svgWidth-leftPadding-rightPadding])
 
-          xAxis = d3.svg.axis().scale(xScale).orient("bottom")
-            .ticks(0)
-
-          xZeroAxis = d3.svg.axis().scale(xScale).orient("bottom")
-            .ticks(0)
-            .outerTickSize(0)
-            .tickValues([])
-
+          # move zero axis to match new yScale
           xZeroAxisDrawn.transition().duration(500)
-            .attr("transform", "translate(0,#{yScale(0)})")
             .call(xZeroAxis)
+            .attr("transform", "translate(0,#{yScale(0)})")
 
           xZeroAxisDrawn.select("path").attr("stroke-dasharray", 5)
 
+          # rotate and position new labels
           xAxisDrawn.transition().duration(500).call(xAxis)
             .selectAll("text")  
             .style("text-anchor", "end")
@@ -337,40 +208,67 @@ app.directive 'sdViolinPlot', ['$document', '$window', '$timeout', '_', 'Util', 
             
           xAxisDrawn.selectAll("text")
             .attr("dy", ".15em")
-            .attr("transform", "rotate(-40)");
+            .attr("transform", "rotate(-40)")
+            .style("font-weight", "bold")
 
+        ###
+          Description: 
+            Update the existing violins in the plot. Updates the x axis,
+            axis labels, and all box and violing plots with current data
+            set bound to items.
+        ###
+        updateExistingItems = () ->
+          # update x axis
+          updateXAxis()
+
+          # update positive & negative y axis labels
+          yPositiveLabel.transition().duration(500)
+            .attr("transform", (d) ->
+              yZero = yScale(0)
+              yBottom = yScale(min_bound)
+              diff = Math.abs(yZero - yBottom)
+
+              "rotate(270) translate(-#{yZero + (diff / 2)},-45)"
+            )
+
+          yNegativeLabel.transition().duration(500)
+            .attr("transform", (d) ->
+              yZero = yScale(0)
+
+              "rotate(270) translate(-#{yZero / 2},-45)"
+            )
+
+          # update all items, including wrapper position, box plot, and
+          # violin plot
           rangeBand = xScale.rangeBand()
-
           items.transition().duration(500)
             .attr("transform", (d,i) -> 
               xTranslate = xScale(d.label) + (rangeBand/2) - (maxViolinWidth/2)
               "translate(#{xTranslate},0)"
             )
             .each((d, i) ->
-              drawBoxPlot(d3.select(this), d)
-              drawViolin(d3.select(this), d)
+              x = d3.scale.linear().range([0, maxViolinWidth])
+              me = d3.select(this)
+              updateBoxPlot(me, d, x)
+              updateViolin(me, d)
             )
-          #rangeBand = xScale.rangeBand()
 
-          # items.transition().duration(500).attr("transform", (d, i) ->
-          #   xTranslate = xScale(d.label) + (rangeBand/2) - 10
-          #   yTranslate = yScale(d[peToUse]+d[ciToUse])
-          #   #console.log yTranslate
-          #   "translate(#{xTranslate},#{yTranslate})"
-          # )
-
+        ###
+          Description:
+            Called whenever the data is changed. Calculates new bounds for the y axis,
+            adjusts the y axis to correspon to new bounds, binds new data to items
+            selection, and calls updateChart helper function.
+        ###
         dataUpdate = () ->
           min_max_points = _.map thedata, (d) -> {min: _.min(d.data), max: _.max(d.data)}
 
           min_bound = _.min(min_max_points, (d) -> d.min).min - 10
           max_bound = _.max(min_max_points, (d) -> d.max).max + 10
 
-          yScale = d3.scale.linear()
+          yScale
             .range([height-topPadding-bottomPadding, 0])
             .domain([min_bound, max_bound])
           
-          yAxis = d3.svg.axis().scale(yScale).orient("left")
-
           yAxisDrawn
             .transition().duration(500)
             .call(yAxis)
@@ -378,8 +276,13 @@ app.directive 'sdViolinPlot', ['$document', '$window', '$timeout', '_', 'Util', 
           items = items.data(thedata, (d) -> d.label)
           updateChart()
 
+        ###
+          Description:
+            Addes & removes new elements in chart using d3 enter() and exit()
+        ###
         updateChart = () ->
 
+          # add items in enter() selection
           itemWrappers = items.enter()
             .append("g")
             .attr("class", "item-wrapper")
@@ -387,9 +290,16 @@ app.directive 'sdViolinPlot', ['$document', '$window', '$timeout', '_', 'Util', 
           gPlus = itemWrappers.append("g").attr("class", "g-plus")
           gMinus = itemWrappers.append("g").attr("class", "g-minus")
 
-          itemWrappers.append("rect").attr("class", "iqr")
-          itemWrappers.append("line").attr("class", "qr-half")
+          itemWrappers.append("rect")
+            .attr("class", "iqr")
+            .attr('stroke', "black")
+            .attr("stroke-width", 1)
+            .attr("fill", "white")
+
           itemWrappers.append("circle").attr("class", "point-estimate")
+            .attr("r", pointEstimateRadius)
+            .attr("fill", "white")
+            .attr("stroke", "black")
 
           gPlus.append('path').attr("class", "area")
           gPlus.append('path').attr("class", "violin")
@@ -400,9 +310,39 @@ app.directive 'sdViolinPlot', ['$document', '$window', '$timeout', '_', 'Util', 
 
           updateExistingItems()
 
+          # remove items in exit() selection by translating offscreen
           items.exit().transition().duration(500).attr("transform", "translate(-60,-100)").remove()
         
+        ###
+          Description:
+            Helper function to draw y axis labels
+        ###
+        drawYLabels = () ->
+          yPositiveLabel = yAxisDrawn.append("text")
+            .attr("class", "y-positive-label")
+            .text("Decrease")
+            .style("font-weight", "bold")
+            .attr("text-anchor", 'middle')
 
+          yNegativeLabel = yAxisDrawn.append("text")
+            .attr("class", "y-negative-label")
+            .text("Increase")
+            .style("font-weight", "bold")
+            .attr("text-anchor", 'middle')
+
+          yAxisLabel = yAxisDrawn.append("text")
+            .attr("class", "y-axis-label")
+            .style("font-size", "1.2em")
+            .text("Number of people out of 100")
+            .style("font-weight", "bold")
+            .attr("text-anchor", 'middle')
+            .attr("transform", "rotate(270) translate(-#{(height-topPadding-bottomPadding) / 2},-70)")
+
+        ###
+          Description:
+            Only called once to setup initial chart structure.  Nothing data-dependent
+            is drawn yet.
+        ###
         drawChart = () ->
           canvas = d3.select(id)
           canvas.style('height', height)
@@ -428,6 +368,16 @@ app.directive 'sdViolinPlot', ['$document', '$window', '$timeout', '_', 'Util', 
             .attr("class", "gradient-plot-y-axis")
             .call(yAxis)
 
+          xScale = d3.scale.ordinal()
+
+          xAxis = d3.svg.axis().scale(xScale).orient("bottom")
+            .ticks(0)
+
+          xZeroAxis = d3.svg.axis().scale(xScale).orient("bottom")
+            .ticks(0)
+            .outerTickSize(0)
+            .tickValues([])
+
           xAxisDrawn = chart.append("g")
             .attr("class", "gradient-plot-x-axis")
             .attr("transform", "translate(0,#{height-topPadding-bottomPadding})")
@@ -435,11 +385,15 @@ app.directive 'sdViolinPlot', ['$document', '$window', '$timeout', '_', 'Util', 
           xZeroAxisDrawn = chart.append("g")
             .attr("class", "gradient-plot-x-axis")
 
+          drawYLabels()
+
           updateChart()
         
+        # bind resize event so that window resizes can update the chart
         win.on 'resize', () ->
           updateExistingItems()
 
+        # timeout before initial draw, so that dom is guaranteed to have rendered
         $timeout () =>
           drawChart()
         , 100

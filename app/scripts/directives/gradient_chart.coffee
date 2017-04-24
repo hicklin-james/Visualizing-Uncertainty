@@ -2,7 +2,6 @@
 
 app = angular.module('547ProjectApp')
 
-# when clicking the element, it will trigger a browser back operation
 app.directive 'sdGradientPlot', ['$document', '$window', '$timeout', '_', 'Util', '$sce', ($document, $window, $timeout, _, Util, $sce) ->
   scope:
     data: "=saData"
@@ -11,24 +10,24 @@ app.directive 'sdGradientPlot', ['$document', '$window', '$timeout', '_', 'Util'
   template:"<div id='{{chartid}}-wrapper' class='gradient-chart' style='width: 100%;'>
               <svg id='{{chartid}}'>
                 <linearGradient id='Gradient1' x1='0' x2='0' y1='0' y2='1'>
-                  <stop offset='0%' stop-color='lightgreen' stop-opacity='0'/>
-                  <stop offset='25%' stop-color='lightgreen' stop-opacity='0.4'/>
-                  <stop offset='100%' stop-color='lightgreen' stop-opacity='1'/>
+                  <stop offset='0%' stop-color='#7C69AA' stop-opacity='0'/>
+                  <stop offset='25%' stop-color='#7C69AA' stop-opacity='0.4'/>
+                  <stop offset='100%' stop-color='#7C69AA' stop-opacity='1'/>
                 </linearGradient>
                 <linearGradient id='Gradient2' x1='0' x2='0' y1='0' y2='1'>
-                  <stop offset='0%' stop-color='lightgreen' stop-opacity='1'/>
-                  <stop offset='75%' stop-color='lightgreen' stop-opacity='0.4'/>
-                  <stop offset='100%' stop-color='lightgreen' stop-opacity='0'/>
+                  <stop offset='0%' stop-color='#7C69AA' stop-opacity='1'/>
+                  <stop offset='75%' stop-color='#7C69AA' stop-opacity='0.4'/>
+                  <stop offset='100%' stop-color='#7C69AA' stop-opacity='0'/>
                 </linearGradient>
                 <linearGradient id='Gradient3' x1='0' x2='0' y1='0' y2='1'>
-                  <stop offset='0%' stop-color='#ffbfbb' stop-opacity='0'/>
-                  <stop offset='25%' stop-color='#ffbfbb' stop-opacity='0.4'/>
-                  <stop offset='100%' stop-color='#ffbfbb' stop-opacity='1'/>
+                  <stop offset='0%' stop-color='#F1592F' stop-opacity='0'/>
+                  <stop offset='25%' stop-color='#F1592F' stop-opacity='0.4'/>
+                  <stop offset='100%' stop-color='#F1592F' stop-opacity='1'/>
                 </linearGradient>
                 <linearGradient id='Gradient4' x1='0' x2='0' y1='0' y2='1'>
-                  <stop offset='0%' stop-color='#ffbfbb' stop-opacity='1'/>
-                  <stop offset='75%' stop-color='#ffbfbb' stop-opacity='0.4'/>
-                  <stop offset='100%' stop-color='#ffbfbb' stop-opacity='0'/>
+                  <stop offset='0%' stop-color='#F1592F' stop-opacity='1'/>
+                  <stop offset='75%' stop-color='#F1592F' stop-opacity='0.4'/>
+                  <stop offset='100%' stop-color='#F1592F' stop-opacity='0'/>
                 </linearGradient>
               </svg>
             </div>"
@@ -37,8 +36,6 @@ app.directive 'sdGradientPlot', ['$document', '$window', '$timeout', '_', 'Util'
         scope.chartid = Util.makeId()
 
       post: (scope, element, attrs) ->
-        # colors
-        # #BEFAD7, #82D78C, #CD913C, #DE2D26, #A50F15
 
         scope.$on '$destroy', () ->
           win.off('resize')
@@ -90,12 +87,12 @@ app.directive 'sdGradientPlot', ['$document', '$window', '$timeout', '_', 'Util'
         markerHeight = 6
 
         height = 500
-        leftPadding = 30
+        leftPadding = 90
         rightPadding = 20
         topPadding = 20
-        bottomPadding = 150
+        bottomPadding = 180
 
-        barWidth = 20
+        barWidth = 40
 
         canvas = null
         chart = null
@@ -117,9 +114,15 @@ app.directive 'sdGradientPlot', ['$document', '$window', '$timeout', '_', 'Util'
         lowerItemRects = null
         peRects = null
 
+        mindp = null
+        maxdp = null
+
         bestMarkers = null
 
         worstMarkers = null
+        yPositiveLabel = null
+        yNegativeLabel = null
+        yAxisLabel = null
 
         minPeHeight = 3
 
@@ -136,6 +139,7 @@ app.directive 'sdGradientPlot', ['$document', '$window', '$timeout', '_', 'Util'
             .domain([mindp[peToUse] - mindp[ciToUse] - 10,maxdp[peToUse] + maxdp[ciToUse] + 10])
           
           yAxis = d3.svg.axis().scale(yScale).orient("left")
+            .tickFormat((d) -> d3.format(',f')(Math.abs(d)))
 
           yAxisDrawn
             .transition().duration(500)
@@ -221,7 +225,7 @@ app.directive 'sdGradientPlot', ['$document', '$window', '$timeout', '_', 'Util'
         drawGradientBars = () ->
           peRects = items.select(".pe-rect")
             .attr("stroke", "none")
-            .attr("fill", (d) -> if d.direction then "lightgreen" else "#ffbfbb")
+            .attr("fill", (d) -> if d.direction then "#7C69AA" else "#F1592F")
             .attr("x", -barWidth/2)
 
           upperCiRects = items.select(".upper-gradient-rect")
@@ -237,7 +241,9 @@ app.directive 'sdGradientPlot', ['$document', '$window', '$timeout', '_', 'Util'
             .attr("x", -barWidth/2)
 
 
-          peRects.transition().duration(500).attr("height", minPeHeight)
+          peRects.transition().duration(500)
+            .attr("height", minPeHeight)
+            .attr("y", -minPeHeight/2)
 
           upperCiRects.transition().duration(500).attr("height", (d) ->
             Math.abs(yScale(d[peToUse] + d[ciToUse]) - yScale(d[peToUse] - d[ciToUse])) / 2
@@ -315,9 +321,27 @@ app.directive 'sdGradientPlot', ['$document', '$window', '$timeout', '_', 'Util'
             .style("text-anchor", "end")
             .attr("dx", "-.8em")
 
+
+          yPositiveLabel.transition().duration(500)
+            .attr("transform", (d) ->
+              yZero = yScale(0)
+              yBottom = yScale(mindp[peToUse] - mindp[ciToUse] - 10)
+              diff = Math.abs(yZero - yBottom)
+
+              "rotate(270) translate(-#{yZero + (diff / 2)},-45)"
+            )
+
+          yNegativeLabel.transition().duration(500)
+            .attr("transform", (d) ->
+              yZero = yScale(0)
+
+              "rotate(270) translate(-#{yZero / 2},-45)"
+            )
+
           xAxisDrawn.selectAll("text")
             .attr("dy", ".15em")
-            .attr("transform", "rotate(-40)");
+            .attr("transform", "rotate(-40)")
+            .style("font-weight", "bold")
 
         updateExistingItems = () ->
           updateAxis()
@@ -369,15 +393,15 @@ app.directive 'sdGradientPlot', ['$document', '$window', '$timeout', '_', 'Util'
             .append("rect")
             .attr("class", "best-marker")
             .attr("opacity", bestMarkerOpacity)
-            .attr("stroke", (d) -> if d.direction then "lightgreen" else "#ffbfbb")
-            .attr("fill", (d) -> if d.direction then "lightgreen" else "#ffbfbb")
+            .attr("stroke", (d) -> if d.direction then "#7C69AA" else "#F1592F")
+            .attr("fill", (d) -> if d.direction then "#7C69AA" else "#F1592F")
 
           worstMarkers = itemDivs
             .append("rect")
             .attr("class", "worst-marker")
             .attr("opacity", worstMarkerOpacity)
-            .attr("stroke", (d) -> if d.direction then "lightgreen" else "#ffbfbb")
-            .attr("fill", (d) -> if d.direction then "lightgreen" else "#ffbfbb")
+            .attr("stroke", (d) -> if d.direction then "#7C69AA" else "#F1592F")
+            .attr("fill", (d) -> if d.direction then "#7C69AA" else "#F1592F")
 
           itemDivs.attr("transform", "translate(-60,-100)")
 
@@ -393,11 +417,15 @@ app.directive 'sdGradientPlot', ['$document', '$window', '$timeout', '_', 'Util'
             .attr("class", "chart-body")
             .attr("transform", "translate(#{leftPadding},#{topPadding})")
 
+          mindp = _.min(thedata, (d) -> d[peToUse] - d[ciToUse])
+          maxdp = _.max(thedata, (d) -> d[peToUse] + d[ciToUse])
+
           yScale = d3.scale.linear()
             .range([height-topPadding-bottomPadding, 0])
-            .domain([_.min(thedata, (d) -> d[peToUse])[peToUse] - 10,_.max(thedata, (d) -> d[peToUse])[peToUse] + 10])
-
+            .domain([mindp[peToUse] - mindp[ciToUse] - 10,maxdp[peToUse] + maxdp[ciToUse] + 10])
+          
           yAxis = d3.svg.axis().scale(yScale).orient("left")
+            .tickFormat((d) -> d3.format(',f')(Math.abs(d)))
 
           items = chart.selectAll("g")
             .data(thedata, (d) -> d.label)
@@ -406,12 +434,34 @@ app.directive 'sdGradientPlot', ['$document', '$window', '$timeout', '_', 'Util'
             .attr("class", "gradient-plot-y-axis")
             .call(yAxis)
 
+          yPositiveLabel = yAxisDrawn.append("text")
+            .attr("class", "y-positive-label")
+            .text("Decrease")
+            .style("font-weight", "bold")
+            .attr("text-anchor", 'middle')
+
+          yNegativeLabel = yAxisDrawn.append("text")
+            .attr("class", "y-negative-label")
+            .text("Increase")
+            .style("font-weight", "bold")
+            .attr("text-anchor", 'middle')
+
+          yAxisLabel = yAxisDrawn.append("text")
+            .attr("class", "y-axis-label")
+            .style("font-size", "1.2em")
+            .text("Number of people out of 100")
+            .style("font-weight", "bold")
+            .attr("text-anchor", 'middle')
+            .attr("transform", "rotate(270) translate(-#{(height-topPadding-bottomPadding) / 2},-70)")
+
           xAxisDrawn = chart.append("g")
             .attr("class", "gradient-plot-x-axis")
             .attr("transform", "translate(0,#{height-topPadding-bottomPadding})")
 
           xZeroAxisDrawn = chart.append("g")
             .attr("class", "gradient-plot-x-axis")
+
+
 
           #itemDivs = items.attr("class", "gradient-item")
 

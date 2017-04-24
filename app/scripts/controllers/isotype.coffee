@@ -85,11 +85,11 @@ class IsotypeCtrl
         name: dataAttr.name
         iconArrayData: [
           value: rest
-          color: "lightgreen"
+          color: "#BEBEBE"
           label: dataAttr.iconArrayLabels[0]
          ,
           value: baseline
-          color: "lightblue"
+          color: "#7C69AA"
           label: dataAttr.iconArrayLabels[1]
         ].reverse()
       d
@@ -102,11 +102,11 @@ class IsotypeCtrl
         name: dataAttr.name
         iconArrayData: [
           value: rest
-          color: "lightgreen"
+          color: "#BEBEBE"
           label: dataAttr.iconArrayLabels[0]
          ,
           value: baseline
-          color: "#ffbfbb"
+          color: "#F1592F"
           label: dataAttr.iconArrayLabels[1]
         ].reverse()
       d

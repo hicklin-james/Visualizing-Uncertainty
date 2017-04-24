@@ -9,7 +9,7 @@
   -->
   <div ng-repeat="isotypeDataChunk in ctrl.chunkedIsotypeData track by $index" class="row">
     <div ng-repeat="isoData in isotypeDataChunk track by isoData.key" class="col-md-6">
-      <h3>{{isoData.name}}</h3>
+      <h4>{{isoData.name}}</h4>
       <div sd-icon-array sa-num-per-row="50" sa-data="isoData.iconArrayData"></div>
     </div>
   </div>

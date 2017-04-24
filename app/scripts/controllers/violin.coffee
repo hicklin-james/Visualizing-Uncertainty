@@ -18,7 +18,7 @@ class ViolinCtrl
 
   convertAttributesToUsableViolinData: (attrs) ->
     @violinData =  @_.map attrs, (attr) ->
-      color: if attr.deltaDirection then "lightgreen" else "#ffbfbb"
+      color: if attr.deltaDirection then "#7C69AA" else "#F1592F"
       data: attr.data
       key: attr.key
       label: attr.label

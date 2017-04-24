@@ -100,7 +100,7 @@ class MainCtrl
   randomlySample: () ->
     @sampledAttrs = []
     @_.each @attributes, (attr, index) =>
-      randomSample = @Util.randomlySampleArray(10, attr.data)
+      randomSample = @Util.randomlySampleArray(100, attr.data)
       newAttr = new @DiseaseAttribute(@attrInputs[index], randomSample)
       newAttr.selected = attr.selected
       @sampledAttrs.push newAttr

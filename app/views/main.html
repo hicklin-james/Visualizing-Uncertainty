@@ -18,35 +18,35 @@
     </div>
   </div>
 </div>
-<div class="clearfix">
-  <div class="row">
-    <div class="col-md-9 col-md-offset-3">
-      <div class="alert alert-info inline-block">
-        <span ng-show="ctrl.resampled && !(ctrl.showWorstCase || ctrl.showBestCase)">
-          You are currently visualizing a <strong>random selection of 100 people</strong> from the underlying distribution.
-        </span>
-        <span ng-show="ctrl.resampled && ctrl.showBestCase">
-          You are currently visualizing the <strong>best</strong> case scenario given a <strong>random selection of 100 people</strong> from the underlying distribution.
-        </span>
-        <span ng-show="ctrl.resampled && ctrl.showWorstCase">
-          You are currently visualizing the <strong>worst</strong> case scenario given a <strong>random selection of 100 people</strong> from the underlying distribution.
-        </span>
-        <span ng-show="!ctrl.resampled && ctrl.showBestCase">
-          You are currently visualizing the <strong>best</strong> case scenario given the entire sample.
-        </span>
-        <span ng-show="!ctrl.resampled && ctrl.showWorstCase">
-          You are currently visualizing the <strong>worst</strong> case scenario given the entire sample.
-        </span>
-        <span ng-show="!ctrl.resampled && !(ctrl.showWorstCase || ctrl.showBestCase)">
-          You are currently visualizing the <strong>the entire sample</strong>.
-        </span>
-      </div>
-    </div>
-  </div>
-</div>
 <div class="row" ng-if="ctrl.selectedDefaults">
   <div class="col-md-3">
     <div ng-include="'/views/toolbox.html'"></div>
+    <div class="clearfix">
+      <div class="row">
+        <div class="col-md-12">
+          <div class="alert alert-info inline-block">
+            <span ng-show="ctrl.resampled && !(ctrl.showWorstCase || ctrl.showBestCase)">
+              You are currently visualizing a <strong>random selection of 100 people</strong> from the underlying distribution.
+            </span>
+            <span ng-show="ctrl.resampled && ctrl.showBestCase">
+              You are currently visualizing the <strong>best</strong> case scenario given a <strong>random selection of 100 people</strong> from the underlying distribution.
+            </span>
+            <span ng-show="ctrl.resampled && ctrl.showWorstCase">
+              You are currently visualizing the <strong>worst</strong> case scenario given a <strong>random selection of 100 people</strong> from the underlying distribution.
+            </span>
+            <span ng-show="!ctrl.resampled && ctrl.showBestCase">
+              You are currently visualizing the <strong>best</strong> case scenario given the entire sample.
+            </span>
+            <span ng-show="!ctrl.resampled && ctrl.showWorstCase">
+              You are currently visualizing the <strong>worst</strong> case scenario given the entire sample.
+            </span>
+            <span ng-show="!ctrl.resampled && !(ctrl.showWorstCase || ctrl.showBestCase)">
+              You are currently visualizing the <strong>the entire sample</strong>.
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
   <div class="col-md-9">
     <div ng-controller="IsotypeCtrl" ng-include="'/views/isotype_comparison.html'"></div>

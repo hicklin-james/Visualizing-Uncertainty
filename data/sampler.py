@@ -17,7 +17,7 @@ def strokeRiskData(data_file):
 def bleedRiskData(data_file):
   mean = 25.3
   sd = 20
-  sampleSize = 30
+  sampleSize = 3000
   data = np.random.normal(mean, sd, sampleSize)
   bleedDelta = 0.1
 
@@ -44,9 +44,9 @@ def ichRiskData(data_file):
   #f.close()
 
 def abdoRiskData(data_file):
-  mean = 37
+  mean = 27
   sd = 30
-  sampleSize = 20
+  sampleSize = 200
   data = np.random.normal(mean, sd, sampleSize)
   abdoPainDelta = 0.06
 

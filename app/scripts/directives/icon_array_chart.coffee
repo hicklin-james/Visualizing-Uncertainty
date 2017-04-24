@@ -2,16 +2,10 @@
 
 app = angular.module('547ProjectApp')
 
-# when clicking the element, it will trigger a browser back operation
 app.directive 'sdIconArray', ['$document', '$window', '$timeout', '_', 'Util', '$sce', ($document, $window, $timeout, _, Util, $sce) ->
   scope:
     data: "=saData"
-    singleColor: "@saSingleColor"
-    maxValue: "@saMaxValue"
-    excludePercentages: "@saExcludePercentages"
     numPerRow: "@saNumPerRow"
-    selectedIndex: "@saSelectedIndex"
-    includeAxis: "@saIncludeAxis"
   template:"<div id='{{chartid}}-wrapper' class='icon-array-chart' style='width: 95%;'>
               <svg id='{{chartid}}'></svg>
             </div>"
@@ -20,39 +14,28 @@ app.directive 'sdIconArray', ['$document', '$window', '$timeout', '_', 'Util', '
         scope.chartid = Util.makeId()
 
       post: (scope, element, attrs) ->
-        # colors
-        # #BEFAD7, #82D78C, #CD913C, #DE2D26, #A50F15
 
         scope.$on '$destroy', () ->
           win.off('resize')
 
+        # deep watch the data, and update data if necessary
         scope.$watch 'data', (nv, ov) ->
-          #console.log "CHANGED!"
           if nv isnt ov
             dataUpdate()
         , true
-
-        # dark blue, turquoise, purple
 
         initArrayItems = (n, color, selected=false) ->
           items = []
           if n > 0
             for i in [0..n-1]
               item = {
-                color: color, 
-                selected: selected,
-                first_selected: i is 0,
-                last_selected: i is n-1
+                color: color
               }
               items.push item
           items
         
-        selected = parseInt(scope.selectedIndex)
-
+        # map data structure we can use
         thedata = _.flatten(_.map scope.data, (dp, index) -> initArrayItems(dp.value, dp.color, (index + 1) is parseInt(scope.selectedIndex)))
-
-        p = null
-        globalAnimate = (element.offset().left > -100)
 
         # cancel the timeout if the state changes - this prevents
         # errors in d3 when it tries to render the chart AFTER the page
@@ -60,21 +43,11 @@ app.directive 'sdIconArray', ['$document', '$window', '$timeout', '_', 'Util', '
         scope.$on '$stateChangeStart', (e, to, top, from, fromp) =>
           $timeout.cancel(p)
 
-        default_colors = ['#a8c3b1','#ff7f0e','#9ad29a','#9dd0c9','#9467bd','#8c564b','#e377c2','#7f7f7f','#bcbd22','#17becf']
-
         win = angular.element($window)
         id = "#" + scope.chartid
         wrapperid = id + "-wrapper"
         #console.log wrapperid
         data = scope.data
-
-        colors = null
-        if scope.selectedIndex
-          colors = _.map data, (datum, index) -> if (index + 1) is parseInt(scope.selectedIndex) then "#1f77b4" else "#d3d3d3"
-        else if scope.singleColor
-          colors = _.map data, (datum, index) -> scope.singleColor
-        else
-          colors = default_colors
 
         biggestDataPoint = _.max(data, (d) -> d.value)
         longestLabel = _.max(data, (d) -> d.label.length)
@@ -88,6 +61,13 @@ app.directive 'sdIconArray', ['$document', '$window', '$timeout', '_', 'Util', '
 
         textBorderPadding = 3
 
+        ###
+          Input:
+            headRadius - radius of the head in pixels - the body is drawn
+                         with respect to the size of the head
+            personWrapper - d3 selection for wrapper of person to be drawn
+            color - color of person
+        ###
         drawPerson = (headRadius, personWrapper, color) ->
           r = headRadius
           headMidBottomX = r
@@ -200,20 +180,7 @@ app.directive 'sdIconArray', ['$document', '$window', '$timeout', '_', 'Util', '
             pathString += ' C ' + lsx1 + ' ' + lsy1 + ', ' + lsx2 + ' ' + lsy2 + ', ' + lsex + ' ' + lsey
             pathString
           ).attr('stroke', color)
-            .attr('stroke-width', '1').attr('fill', color) #color)
-
-          # totalLength = body.node().getTotalLength()
-          # console.log totalLength
-
-          # body.attr("stroke-dasharray", totalLength + " " + totalLength)
-          #   .attr("stroke-dashoffset", totalLength)
-          #   .transition().duration(1000).ease("linear")
-          #   .attr("stroke-dashoffset", 0)
-          #   .each("end", (d,i) ->
-          #     d3.select(this).transition().duration(500)
-          #       .attr("stroke", color)
-          #       .attr("fill", color)
-          #  )
+            .attr('stroke-width', '1').attr('fill', color)
 
 
         wrap = (textItem, width, label) ->
@@ -328,16 +295,6 @@ app.directive 'sdIconArray', ['$document', '$window', '$timeout', '_', 'Util', '
                 .attr("dy", 0)
 
               lines = wrap(this, svgWidth - (1.75*r) - (4 * r) - (1.75 * r) - (2 * textBorderPadding) - 1, "#{d.value} out of 100 people (#{d.value}%) #{d.label}")
-              
-              parent.select("rect").attr("fill", "white")
-                .attr("width", itemWidth + (2 * textBorderPadding))
-                .attr("height", biggerHeight + (2 * textBorderPadding))
-                .attr("x", 0)
-                .attr("y", 0)
-                .attr("stroke-width", 1)
-                .attr("stroke", (d) ->
-                  if (i + 1) is parseInt(scope.selectedIndex) then return "black" else return "none"
-                )
               )
 
           legendItems.select("circle")
@@ -360,115 +317,11 @@ app.directive 'sdIconArray', ['$document', '$window', '$timeout', '_', 'Util', '
             return("translate("+((1.75*r)+(col*((2*r) + (r * 1.5))))+","+(totalLegendHeight + ((1.75*r)+(row*(8*r))))+")")
           )
 
-          # people.selectAll("rect")
-          #   .attr("width", r * 2 + (r * 1.5))
-          #   .attr("height", (r * 2) + (6*r))
-          #   .attr("x", -r - ((r * 1.5) / 2))
-          #   .attr("y", -r)
-          #   .attr("stroke", (d,i) ->
-          #     if d.selected
-          #       return "#bdbdbd"
-          #     else 
-          #       return "none"
-          #   )
-          #   .attr("fill", "none")
-          #   .attr("stroke-width", 2)
-
-          nonOverlapBorder = (me, d) ->
-            me.select('.top-border-line')
-              .attr('x1', -r - ((r * 1.5) / 2))
-              .attr('y1', -r)
-              .attr('x2', (-r - ((r * 1.5) / 2)) + (r * 2 + (r * 1.5)))
-              .attr('y2', -r)
-              .attr('stroke-width', 1)
-              .attr('stroke', 'black')
-
-            me.select('.bottom-border-line')
-              .attr('x1', -r - ((r * 1.5) / 2))
-              .attr('y1', (-r + ((r * 2) + (6*r))))
-              .attr('x2', (-r - ((r * 1.5) / 2)) + (r * 2 + (r * 1.5)))
-              .attr('y2', (-r + ((r * 2) + (6*r))))
-              .attr('stroke-width', 1)
-              .attr('stroke', 'black')
-
-            if d.first_selected
-              me.select('.left-border-line')
-                .attr('x1', -r - ((r * 1.5) / 2))
-                .attr('y1', -r)
-                .attr('x2', -r - ((r * 1.5) / 2))
-                .attr('y2', (-r + ((r * 2) + (6*r))))
-                .attr('stroke-width', 1)
-                .attr('stroke', 'black')
-
-            if d.last_selected
-              me.select('.right-border-line')
-                .attr('x1', (-r - ((r * 1.5) / 2)) + (r * 2 + (r * 1.5)))
-                .attr('y1', -r)
-                .attr('x2', (-r - ((r * 1.5) / 2)) + (r * 2 + (r * 1.5)))
-                .attr('y2', (-r + ((r * 2) + (6*r))))
-                .attr('stroke-width', 1)
-                .attr('stroke', 'black')
-
-          overlapBorder = (me, d, i) ->
-            directAboveIndex = i - itemsPerRow
-            directBelowIndex = i + itemsPerRow
-            if directAboveIndex < 0 or !thedata[directAboveIndex]?.selected
-              me.select('.top-border-line')
-                .attr('x1', -r - ((r * 1.5) / 2))
-                .attr('y1', -r)
-                .attr('x2', (-r - ((r * 1.5) / 2)) + (r * 2 + (r * 1.5)))
-                .attr('y2', -r)
-                .attr('stroke-width', 1)
-                .attr('stroke', 'black')
-
-            if directBelowIndex > thedata.length or !thedata[directBelowIndex]?.selected
-              me.select('.bottom-border-line')
-                .attr('x1', -r - ((r * 1.5) / 2))
-                .attr('y1', (-r + ((r * 2) + (6*r))))
-                .attr('x2', (-r - ((r * 1.5) / 2)) + (r * 2 + (r * 1.5)))
-                .attr('y2', (-r + ((r * 2) + (6*r))))
-                .attr('stroke-width', 1)
-                .attr('stroke', 'black')
-
-            if d.first_selected or (i+1) % itemsPerRow is 1
-              me.select('.left-border-line')
-                .attr('x1', -r - ((r * 1.5) / 2))
-                .attr('y1', -r)
-                .attr('x2', -r - ((r * 1.5) / 2))
-                .attr('y2', (-r + ((r * 2) + (6*r))))
-                .attr('stroke-width', 1)
-                .attr('stroke', 'black')
-
-            if d.last_selected or (i+1) % itemsPerRow is 0
-              me.select('.right-border-line')
-                .attr('x1', (-r - ((r * 1.5) / 2)) + (r * 2 + (r * 1.5)))
-                .attr('y1', -r)
-                .attr('x2', (-r - ((r * 1.5) / 2)) + (r * 2 + (r * 1.5)))
-                .attr('y2', (-r + ((r * 2) + (6*r))))
-                .attr('stroke-width', 1)
-                .attr('stroke', 'black')
-
-          drawBorder = (me, d, i, overlapped) ->
-            if overlapped
-              overlapBorder(me, d, i)
-            else
-              nonOverlapBorder(me, d)
-
-          overlapped = false
-
           people.each((d, i) ->
             me = d3.select(this)
-            #rect = me.select('rect')
-            if d.first_selected and overlapped is false and thedata[i + itemsPerRow]?.selected
-              overlapped = true
-
-            if d.selected
-              drawBorder(me, d, i, overlapped)
 
             drawPerson(r, me, d.color)
           )
-
-
 
         drawChart = () ->
 
@@ -484,17 +337,6 @@ app.directive 'sdIconArray', ['$document', '$window', '$timeout', '_', 'Util', '
             .enter()
             .append("g")
 
-          borders = people.append("g")
-           
-          borders.append('line')
-            .attr('class', 'left-border-line')
-          borders.append('line')
-            .attr('class', 'bottom-border-line')
-          borders.append('line')
-            .attr('class', 'top-border-line')
-          borders.append('line')
-            .attr('class', 'right-border-line')
-
           people.append("circle")
           people.append("path")
 
@@ -503,7 +345,6 @@ app.directive 'sdIconArray', ['$document', '$window', '$timeout', '_', 'Util', '
             .enter()
             .append("g")
 
-          legendItems.append("rect")
           legendItems.append("circle")
           legendItems.append("text")
             .attr('alignment-baseline', 'middle')
@@ -511,7 +352,7 @@ app.directive 'sdIconArray', ['$document', '$window', '$timeout', '_', 'Util', '
 
 #            .attr("dominant-baseline", "central")
 
-          updateChart(globalAnimate)
+          updateChart()
         
         # in link scope
         win.on 'resize', () ->
