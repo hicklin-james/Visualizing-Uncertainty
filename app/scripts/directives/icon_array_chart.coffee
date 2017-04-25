@@ -63,10 +63,12 @@ app.directive 'sdIconArray', ['$document', '$window', '$timeout', '_', 'Util', '
 
         ###
           Input:
-            headRadius - radius of the head in pixels - the body is drawn
-                         with respect to the size of the head
+            headRadius - radius of the head in pixels
             personWrapper - d3 selection for wrapper of person to be drawn
             color - color of person
+          Description:
+            This function draws a person for an icon array. The body is drawn in proportion
+            with the headRadius input, inside the personWrapper input.
         ###
         drawPerson = (headRadius, personWrapper, color) ->
           r = headRadius
@@ -182,11 +184,23 @@ app.directive 'sdIconArray', ['$document', '$window', '$timeout', '_', 'Util', '
           ).attr('stroke', color)
             .attr('stroke-width', '1').attr('fill', color)
 
+        ###
+          Input:
+            textItem -> d3 selection for text item to be wrapped
+            width -> max width of the text
+            label -> label to be written
+          Returns:
+            Number of lines that text takes.
+          Description:
+            This function takes the text in a d3 text selection and converts it
+            to multiple stacked tspans, to simulate text wrapping. 
 
+            Code adapted from https://bl.ocks.org/mbostock/7555321 and all credit
+            to Mike Bostock
+        ###
         wrap = (textItem, width, label) ->
           text = d3.select(textItem)
           words = label.split(/\s+/).reverse()
-          #console.log words
           word = undefined
           line = []
           lineNumber = 0
@@ -197,25 +211,27 @@ app.directive 'sdIconArray', ['$document', '$window', '$timeout', '_', 'Util', '
           tspan = text.text(null).append('tspan').attr('x', x).attr('y', y).attr('dy', dy + 'em')
           while word = words.pop()
             line.push word
-            #console.log word
             tspan.text line.join("\ ")
             if tspan.node().getComputedTextLength() > width
               w = line.pop()
-              #console.log "POPPED"
-              #console.log line
               newText = line.join(" ")
-              #console.log newText
               tspan.text(newText)
               line = [ w ]
               tspan = text.append('tspan').attr('x', x).attr('y', y).attr('dy', ++lineNumber * lineHeight + dy + 'em').text(word)
-              #console.log tspan
           return lineNumber + 1
 
+        ###
+          Description:
+            Main function called when chart data is updated. It deals with transition colors
+            of changed data items
+        ###
         dataUpdate = () ->
+          # update data using d3 data() function
           thedata = _.flatten(_.map scope.data, (dp, index) -> initArrayItems(dp.value, dp.color, (index + 1) is parseInt(scope.selectedIndex)))
           people.data(thedata)
           legendItems.data(scope.data)
-            
+          
+          # transition body and head colors to new colors if changed
           people.select("path")
             .transition()
             .duration(500)
@@ -238,20 +254,69 @@ app.directive 'sdIconArray', ['$document', '$window', '$timeout', '_', 'Util', '
               d.color
             )
 
+          # adjust legend labels if they have changed
           chartWrapper = d3.select(wrapperid)
           svgWidth = parseInt(chartWrapper.style('width'))
           r = ((svgWidth / itemsPerRow) / 3.5)
-          totalLegendHeight = r
           legendItems.select("text")
             .each((d,i) ->
               wrap(this, svgWidth - (1.75*r) - (4 * r) - (1.75 * r) - (2 * textBorderPadding) - 1,  "#{d.value} out of 100 people (#{d.value}%) #{d.label}")
             )
 
-        updateChart = (animate) ->
+        ###
+          Inputs: 
+            item -> d3 selection for the legend item wrapper
+            currLegendHeight -> the current height of the legend at this update point
+            svgWidth -> the width of the current svg element
+            r -> the radius of the marker
+            d -> item data
+          Returns:
+            Height of this legend item
+          Description:
+            Updates an individual legend item
+        ###
+        updateLegendItem = (item, currLegendHeight, svgWidth, r, d) ->
+          text = item.select("text")
+          # wrap the text, and return the number of lines
+          lines = wrap(text.node(), svgWidth - (1.75*r) - (4 * r) - (1.75 * r) - (2 * textBorderPadding) - 1,  "#{d.value} out of 100 people (#{d.value}%) #{d.label}")
+          # get text bounds
+          bounds = text.node().getBoundingClientRect()
+          # get the height of the text and width of the text
+          itemheight = parseInt(bounds.height)
+          itemWidth = parseInt(bounds.width) + ((r * 2) + (1.75 * r)) + ((1.75 * r) - r)
+          # get the bigger height out of the text height and circle marker diameter
+          biggerHeight = Math.max(itemheight, (r*2))
+          # move the item down by the current total legend height
+          item.attr("transform", (d,ii) => "translate(0," + currLegendHeight + ")")
+          # update the legend height
+          legendItemHeight = (biggerHeight + (r / 2) + (2 * textBorderPadding))
+          # adjust legend marker position
+          item.select("circle").attr("cy", r)
+            .attr("cx", (1.75*r))
+            .attr("cy", ((biggerHeight + (2 * textBorderPadding)) / 2))
+
+          # adjust text y position so that it is vertically centered
+          lineHeight = itemheight / lines
+          y = ((biggerHeight / 2) / lines) + textBorderPadding
+          text
+            .attr("y", 0)
+            .attr("transform", "translate(0,#{(biggerHeight / 2) + (lineHeight / 2) - ((lines - 1) * (lineHeight / 2))})")
+            .attr("dy", 0)
+
+          # wrap again - not sure why this is needed but it seems to fix a wrapping issue :S
+          wrap(text.node(), svgWidth - (1.75*r) - (4 * r) - (1.75 * r) - (2 * textBorderPadding) - 1, "#{d.value} out of 100 people (#{d.value}%) #{d.label}")
+          # return this legend item's legend height
+          legendItemHeight
+          
+
+        ###
+          Description:
+            Main chart update function
+        ###
+        updateChart = () ->
 
           chartWrapper = d3.select(wrapperid)
           svgWidth = parseInt(chartWrapper.style('width'))
-          #console.log svgWidth
           r = ((svgWidth / itemsPerRow) / 3.5)
           canvas.style('width', svgWidth + "px")
 
@@ -267,36 +332,16 @@ app.directive 'sdIconArray', ['$document', '$window', '$timeout', '_', 'Util', '
 
           totalLegendHeight = r
 
-          legendItems.select("text")
-            #.call(wrap, svgWidth - (1.75*r) - (4 * r) - (1.75 * r))
+          # iterate over each legend item, and keep track of the height as we go
+          # once we get to the end of the legend, we know where to start the isotypes
+          # from
+          legendItems #.select("text")
             .each((d,i) ->
-              lines = wrap(this, svgWidth - (1.75*r) - (4 * r) - (1.75 * r) - (2 * textBorderPadding) - 1,  "#{d.value} out of 100 people (#{d.value}%) #{d.label}")
-              #totalLegendHeight += (2 * r)
-              parent = d3.select(this.parentNode)
-              bounds = this.getBoundingClientRect()
-              itemheight = parseInt(bounds.height)
-              itemWidth = parseInt(bounds.width) + ((r * 2) + (1.75 * r)) + ((1.75 * r) - r)
-              biggerHeight = Math.max(itemheight, (r*2))
-              #totalLegendHeight += r
-              parent.attr("transform", (d,ii) => "translate(0," + totalLegendHeight + ")")
-              totalLegendHeight += (biggerHeight + (r / 2) + (2 * textBorderPadding))
-              parent.select("circle").attr("cy", r)
-                .attr("cx", (1.75*r))
-                .attr("cy", ((biggerHeight + (2 * textBorderPadding)) / 2))
+              textItem = d3.select(this)
+              totalLegendHeight += updateLegendItem(textItem, totalLegendHeight, svgWidth, r, d)
+            )
 
-              lineHeight = itemheight / lines
-              #console.log r/2
-              y = ((biggerHeight / 2) / lines) + textBorderPadding
-              d3.select(this)
-                .attr("y", 0)
-                .attr("transform", "translate(0,#{(biggerHeight / 2) + (lineHeight / 2) - ((lines - 1) * (lineHeight / 2))})")
-                #.attr("transform", "translate(0,#{lineHeight + (((biggerHeight + (2 * textBorderPadding)) - itemheight) / 2) - (lineHeight / lines)})")
-                #.attr("transform", "translate(0,#{(((biggerHeight + (2 * textBorderPadding)) - itemheight) / 2) - ((lineHeight / 2) / lines)})")
-                .attr("dy", 0)
-
-              lines = wrap(this, svgWidth - (1.75*r) - (4 * r) - (1.75 * r) - (2 * textBorderPadding) - 1, "#{d.value} out of 100 people (#{d.value}%) #{d.label}")
-              )
-
+          # update legend item markers with proper colors
           legendItems.select("circle")
             .attr("r", r)
             .attr("stroke-width", 1)
@@ -306,23 +351,30 @@ app.directive 'sdIconArray', ['$document', '$window', '$timeout', '_', 'Util', '
               d.color
             )
 
+          # setup isotype variables
           numRows = Math.ceil(thedata.length / itemsPerRow)
           vertPadding = 10;
           height = (numRows * rowHeight) + totalLegendHeight + vertPadding;
           canvas.style("height", height + "px")
 
+          # transform isotypes to point after legend
           people.attr("transform", (d, i) =>
             col = i % itemsPerRow
             row = Math.floor(i / itemsPerRow )
             return("translate("+((1.75*r)+(col*((2*r) + (r * 1.5))))+","+(totalLegendHeight + ((1.75*r)+(row*(8*r))))+")")
           )
 
+          # for each item, draw a person
           people.each((d, i) ->
             me = d3.select(this)
-
             drawPerson(r, me, d.color)
           )
 
+        ###
+          Description:
+            Main drawing function only called once. Mostly used to setup vis structure
+            and initialize variables.
+        ###
         drawChart = () ->
 
           canvas = d3.select(id)
@@ -350,20 +402,15 @@ app.directive 'sdIconArray', ['$document', '$window', '$timeout', '_', 'Util', '
             .attr('alignment-baseline', 'middle')
             .style("font-size", "0.9em")
 
-#            .attr("dominant-baseline", "central")
-
           updateChart()
         
-        # in link scope
+        # tap into window resize event to keep icon arrays intact on resize
         win.on 'resize', () ->
           updateChart(false)
 
+        # wait for dom to render before first draw
         p = $timeout () =>
           drawChart()
-      
-        
-
-
 
 ]
 

@@ -6,7 +6,6 @@ angular.module('547ProjectApp')
 
       # generate all the necessary variables that we need to work with
       constructor: (diseaseAttrs, inputData=null) ->
-        #sign = (if diseaseAttrs.deltaDirection then -1 else 1)
         @key = diseaseAttrs.key
         @name = diseaseAttrs.name
         @label = diseaseAttrs.label

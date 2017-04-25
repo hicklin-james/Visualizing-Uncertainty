@@ -1,12 +1,17 @@
 # 547-project
 
-This project is generated with [yo angular generator](https://github.com/yeoman/generator-angular)
-version 0.16.0.
-
 ## Build & development
 
-Run `grunt` for building and `grunt serve` for preview.
+Run `npm install` and `bower install` to install dependencies
 
-## Testing
+Run `grunt` to build for production and `grunt serve` to run dev server.
 
-Running `grunt test` will run the unit tests with karma.
+## File structure
+
+- All coffeescript files location in `app/scripts/`
+  - Charts & all D3 functionality implemented in `app/scripts/directives`
+  - Control flow in `app/scripts/controllers`
+  - Data and util helpers in `app/scripts/services
+- View templates in `app/views`
+- CSS in `app/styles`
+- Synthetic data generated from `data/sampler.py`

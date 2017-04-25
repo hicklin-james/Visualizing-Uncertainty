@@ -26,14 +26,4 @@ class GradientCtrl
       ci99: attr.ci99
       direction: attr.deltaDirection
 
-    # @gradientData = [
-    #   label: "Decrease in stroke risk"
-    #   mean: @strokeRiskData.mean
-    #   ci95: @strokeRiskData.ci95
-    #  ,
-    #   label: "Increase in bleed risk"
-    #   mean: @bleedRiskData.mean
-    #   ci95: @bleedRiskData.ci95
-    # ]
-
 module.controller 'GradientCtrl', GradientCtrl
