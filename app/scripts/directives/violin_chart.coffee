@@ -360,6 +360,7 @@ app.directive 'sdViolinPlot', ['$document', '$window', '$timeout', '_', 'Util', 
             .domain([min_bound, max_bound])
 
           yAxis = d3.svg.axis().scale(yScale).orient("left")
+            .tickFormat((d) -> d3.format(',f')(Math.abs(d)))
 
           items = chart.selectAll("g")
             .data(thedata, (d) -> d.key)

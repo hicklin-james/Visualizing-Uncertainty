@@ -30,7 +30,7 @@ class MainCtrl
     strokeRiskAttrs = 
       key: "strokeRisk"
       name: "Stroke Risk"
-      label: "Risk of stroke"
+      label: "Have a stroke"
       shortLabel: "Decrease risk of stroke"
       iconArrayLabels: ["don't have a stroke", "saved from having a stroke"]
       description: "Your risk of stroke will decrease if you choose to take warfarin"
@@ -38,7 +38,7 @@ class MainCtrl
     bleedRiskAttrs = 
       key: "bleedRisk"
       name: "Bleed Risk"
-      label: "Risk of major bleed"
+      label: "Have a major bleed"
       iconArrayLabels: ["don't have a major bleed", "have a major bleed caused by warfarin"]
       shortLabel: "Increase risk of bleed"
       description: "Taking warfarin can increase your risk of major internal bleed"
@@ -46,7 +46,7 @@ class MainCtrl
     ichRiskAttrs = 
       key: "ichRisk"
       name: "Intercranial Hemorrhage Risk"
-      label: "Risk of intercranial hemorrhage"
+      label: "Have an intercranial hemorrhage"
       iconArrayLabels: ["don't have an intercranial hemmorhage", "have an intercranial hemmorhage caused by warfarin"]
       shortLabel: "Increase risk of hemorrhage"
       description: "Taking warfarin can increase your risk of an intercranial hemorrhage"
@@ -54,7 +54,7 @@ class MainCtrl
     abdoPainRiskAttrs = 
       key: "abdoPain"
       name: "Abdominal Pain Risk"
-      label: "Risk of abdominal pain"
+      label: "Have abdominal pain"
       iconArrayLabels: ["don't have any abdominal pain", "develop abdominal pain from taking warfarin"]
       shortLabel: "Increase risk of abdominal pain"
       description: "Taking warfarin can increase your risk of abdominal pain."

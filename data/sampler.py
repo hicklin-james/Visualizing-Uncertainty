@@ -16,7 +16,7 @@ def strokeRiskData(data_file):
 
 def bleedRiskData(data_file):
   mean = 25.3
-  sd = 20
+  sd =20
   sampleSize = 3000
   data = np.random.normal(mean, sd, sampleSize)
   bleedDelta = 0.1

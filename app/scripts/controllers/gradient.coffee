@@ -15,7 +15,6 @@ class GradientCtrl
     @convertAttributesToUsableGradientData(selectedAttributes)
 
     @$scope.$on "chartDataChanged", (event, nv) =>
-      console.log nv
       @convertAttributesToUsableGradientData(nv)
 
   convertAttributesToUsableGradientData: (attrs) ->
