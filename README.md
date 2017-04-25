@@ -1,5 +1,10 @@
 # 547-project
 
+This is a project for CPSC 547 at the University of British Columbia. It is a tool designed for decision support tool developers to visualize the uncertainty around the risk estimates that are being included in their decision aids.
+
+## Screenshots
+![Alt text](/repo_extras/images/Entire.png "Entire System")
+
 ## Build & development
 
 Run `npm install` and `bower install` to install dependencies
