@@ -1,6 +1,6 @@
-# 547-project
+# Visualizing Uncertainty
 
-This is a project for CPSC 547 at the University of British Columbia. It is a tool designed for decision support tool developers to visualize the uncertainty around the risk estimates that are being included in their decision aids.
+This is a tool designed for decision support tool developers to visualize the uncertainty around the risk estimates that are being included in their decision aids. The primary frameworks used are AngularJS and D3. This was developed as part of an MSc course at the University of British Columbia.
 
 ## Screenshots
 ![Alt text](/repo_extras/images/Entire.png "Entire System")
